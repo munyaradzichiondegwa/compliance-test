@@ -1,0 +1,82 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+html, body {
+  background: #F7F4EC;
+  color: #0A1424;
+}
+
+body {
+  font-family: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, .font-display {
+  font-family: 'Fraunces', ui-serif, Georgia, serif;
+}
+
+/* Visible keyboard focus everywhere — accessibility floor */
+:focus-visible {
+  outline: 2px solid #D9A62E;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #D8D2C0; border-radius: 8px; }
+::-webkit-scrollbar-thumb:hover { background: #D9A62E; }
+
+@layer components {
+  .card {
+    @apply bg-paper border border-line rounded-lg shadow-card;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded font-medium text-sm px-4 py-2 transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-primary {
+    @apply btn bg-charcoal text-parchment hover:bg-charcoal-light;
+  }
+  .btn-gold {
+    @apply btn bg-gold text-white hover:bg-gold-dark;
+  }
+  .btn-outline {
+    @apply btn border border-line bg-paper text-ink hover:bg-parchment;
+  }
+  .btn-danger {
+    @apply btn bg-status-red text-white hover:opacity-90;
+  }
+  .btn-ghost {
+    @apply btn text-charcoal hover:bg-charcoal/5;
+  }
+  .input {
+    @apply w-full rounded border border-line bg-paper px-3 py-2 text-sm text-ink placeholder:text-slate-light focus:border-gold focus:outline-none transition-colors;
+  }
+  .label {
+    @apply block text-xs font-medium uppercase tracking-wide text-slate mb-1.5;
+  }
+  .badge {
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium;
+  }
+  .badge-red { @apply badge bg-status-red-bg text-status-red; }
+  .badge-amber { @apply badge bg-status-amber-bg text-status-amber; }
+  .badge-green { @apply badge bg-status-green-bg text-status-green; }
+  .badge-slate { @apply badge bg-line text-slate; }
+  .eyebrow {
+    @apply text-xs font-semibold uppercase tracking-widest text-gold;
+  }
+}
