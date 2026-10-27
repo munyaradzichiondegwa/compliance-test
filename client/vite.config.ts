@@ -32,13 +32,13 @@ export default defineConfig(({ mode }) => {
           ],
         },
         workbox: {
-          runtimeCaching: [
-            {
-              urlPattern: ({ url }) => url.pathname.startsWith('/api/'),
-              handler: 'NetworkFirst',
-              options: { cacheName: 'api-cache', networkTimeoutSeconds: 5 },
-            },
-          ],
+          // Offline shell only. API responses are NEVER cached: they contain personal and confidential
+          // case data, and a shared field device must not retain them after sign-out. Offline field
+          // capture uses its own on-device outbox (src/offline/queue.ts) that holds only records the officer
+          // has not yet uploaded, so unsynced work is never lost; the cached engagement list is removed on sign-out.
+          navigateFallback: '/index.html',
+          navigateFallbackDenylist: [/^\/api\//, /^\/socket\.io\//],
+          runtimeCaching: [],
         },
       }),
     ],

@@ -7,7 +7,12 @@ import { ShieldCheck, ArrowLeft } from 'lucide-react';
 
 const DEMO_ACCOUNTS = [
   { role: 'Super Administrator', email: 'admin@zacc.gov.zw' },
-  { role: 'Prevention Head', email: 'prevention.head@zacc.gov.zw' },
+  { role: 'Commission Chairperson', email: 'commission.chair@zacc.gov.zw' },
+  { role: 'Prevention and Corporate Governance Committee', email: 'prevention.committee@zacc.gov.zw' },
+  { role: 'Executive Secretary', email: 'exec.secretary@zacc.gov.zw' },
+  { role: 'General Manager, Prevention', email: 'gm.prevention@zacc.gov.zw' },
+  { role: 'Manager, Compliance and Systems Review', email: 'manager.compliance@zacc.gov.zw' },
+  { role: 'Provincial Head (Masvingo)', email: 'provincial.head@zacc.gov.zw' },
   { role: 'Compliance Officer', email: 'officer1@zacc.gov.zw' },
   { role: 'Systems Reviewer', email: 'reviewer1@zacc.gov.zw' },
   { role: 'Monitoring Officer', email: 'monitoring1@zacc.gov.zw' },
@@ -101,14 +106,14 @@ export default function Login() {
               <p className="text-sm text-slate mb-5">Use your registered ZACC or institution email.</p>
               <form onSubmit={handleCredentials} className="space-y-4">
                 <div>
-                  <label className="label">Email address</label>
-                  <input className="input" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@zacc.gov.zw" />
+                  <label className="label" htmlFor="login-email">Email address</label>
+                  <input id="login-email" autoComplete="username" className="input" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@zacc.gov.zw" />
                 </div>
                 <div>
-                  <label className="label">Password</label>
-                  <input className="input" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••••" />
+                  <label className="label" htmlFor="login-password">Password</label>
+                  <input id="login-password" autoComplete="current-password" className="input" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••••" />
                 </div>
-                {error && <div className="text-sm text-status-red bg-status-red-bg rounded px-3 py-2">{error}</div>}
+                {error && <div role="alert" className="text-sm text-status-red bg-status-red-bg rounded px-3 py-2">{error}</div>}
                 <button type="submit" disabled={busy} className="btn-primary w-full">
                   {busy ? 'Checking…' : 'Continue'}
                 </button>
@@ -162,8 +167,10 @@ export default function Login() {
               </div>
               <form onSubmit={handleMfaSetup} className="space-y-4">
                 <div>
-                  <label className="label">6-digit code from your app</label>
+                  <label className="label" htmlFor="mfa-setup-code">6-digit code from your app</label>
                   <input
+                    id="mfa-setup-code"
+                    autoComplete="one-time-code"
                     className="input text-center text-lg tracking-[0.3em] font-mono"
                     inputMode="numeric"
                     maxLength={6}
@@ -174,7 +181,7 @@ export default function Login() {
                     autoFocus
                   />
                 </div>
-                {error && <div className="text-sm text-status-red bg-status-red-bg rounded px-3 py-2">{error}</div>}
+                {error && <div role="alert" className="text-sm text-status-red bg-status-red-bg rounded px-3 py-2">{error}</div>}
                 <button type="submit" disabled={busy || code.length !== 6} className="btn-primary w-full">
                   {busy ? 'Verifying…' : 'Verify & Enable'}
                 </button>
@@ -193,7 +200,10 @@ export default function Login() {
               </div>
               <p className="text-sm text-slate mb-4">Open your authenticator app and enter the current 6-digit code.</p>
               <form onSubmit={handleMfaChallenge} className="space-y-4">
+                <label className="sr-only" htmlFor="mfa-code">6-digit authenticator code</label>
                 <input
+                  id="mfa-code"
+                  autoComplete="one-time-code"
                   className="input text-center text-lg tracking-[0.3em] font-mono"
                   inputMode="numeric"
                   maxLength={6}
@@ -203,7 +213,7 @@ export default function Login() {
                   placeholder="000000"
                   autoFocus
                 />
-                {error && <div className="text-sm text-status-red bg-status-red-bg rounded px-3 py-2">{error}</div>}
+                {error && <div role="alert" className="text-sm text-status-red bg-status-red-bg rounded px-3 py-2">{error}</div>}
                 <button type="submit" disabled={busy || code.length !== 6} className="btn-primary w-full">
                   {busy ? 'Verifying…' : 'Sign In'}
                 </button>

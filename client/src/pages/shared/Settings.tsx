@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { LanguageSwitcher } from '../../i18n';
 import { useAuth } from '../../context/AuthContext';
 import { api, ApiError } from '../../api/client';
 import { PageHeader, Card } from '../../components/common/UI';
@@ -6,7 +7,7 @@ import { ROLE_LABELS } from '../../types';
 import { ShieldCheck, Bell } from 'lucide-react';
 
 export default function SettingsPage() {
-  const { user } = useAuth();
+  const { user, changePassword: changePw } = useAuth();
   const [prefs, setPrefs] = useState<Record<string, boolean>>({ email: true, sms: true, in_app: true });
   const [pwForm, setPwForm] = useState({ currentPassword: '', newPassword: '' });
   const [pwMsg, setPwMsg] = useState('');
@@ -27,7 +28,7 @@ export default function SettingsPage() {
     setPwMsg('');
     setPwBusy(true);
     try {
-      await api.post('/auth/change-password', pwForm);
+      await changePw(pwForm.currentPassword, pwForm.newPassword);
       setPwMsg('Password updated successfully.');
       setPwForm({ currentPassword: '', newPassword: '' });
     } catch (err) {
@@ -58,11 +59,19 @@ export default function SettingsPage() {
 
           <form onSubmit={changePassword} className="border-t border-line pt-4 space-y-3">
             <div className="text-xs uppercase tracking-wide text-slate">Change Password</div>
-            <input className="input" type="password" placeholder="Current password" required value={pwForm.currentPassword} onChange={(e) => setPwForm({ ...pwForm, currentPassword: e.target.value })} />
-            <input className="input" type="password" placeholder="New password (min. 8 characters)" required minLength={8} value={pwForm.newPassword} onChange={(e) => setPwForm({ ...pwForm, newPassword: e.target.value })} />
-            {pwMsg && <div className={`text-xs rounded px-3 py-2 ${pwMsg.includes('success') ? 'bg-status-green-bg text-status-green' : 'bg-status-red-bg text-status-red'}`}>{pwMsg}</div>}
+            <label className="sr-only" htmlFor="pw-cur">Current password</label>
+            <input id="pw-cur" autoComplete="current-password" className="input" type="password" placeholder="Current password" required value={pwForm.currentPassword} onChange={(e) => setPwForm({ ...pwForm, currentPassword: e.target.value })} />
+            <label className="sr-only" htmlFor="pw-new">New password</label>
+            <input id="pw-new" autoComplete="new-password" className="input" type="password" placeholder="New password (min. 10 characters)" required minLength={10} value={pwForm.newPassword} onChange={(e) => setPwForm({ ...pwForm, newPassword: e.target.value })} />
+            {pwMsg && <div role="status" className={`text-xs rounded px-3 py-2 ${pwMsg.includes('success') ? 'bg-status-green-bg text-status-green' : 'bg-status-red-bg text-status-red'}`}>{pwMsg}</div>}
             <button type="submit" disabled={pwBusy} className="btn-outline w-full">{pwBusy ? 'Updating…' : 'Update Password'}</button>
           </form>
+        </Card>
+
+        <Card>
+          <div className="text-xs uppercase tracking-wide text-slate mb-3">Language</div>
+          <LanguageSwitcher />
+          <p className="text-xs text-slate mt-2">English, Shona and Ndebele. Shona and Ndebele screens cover navigation and common actions; case content stays in the language it was written in.</p>
         </Card>
 
         <Card>
@@ -83,8 +92,10 @@ export default function SettingsPage() {
                 </div>
                 <button
                   onClick={() => togglePref(key)}
+                  role="switch"
+                  aria-checked={!!prefs[key]}
                   className={`w-11 h-6 rounded-full transition-colors relative shrink-0 ${prefs[key] ? 'bg-gold' : 'bg-line'}`}
-                  aria-label={`Toggle ${label}`}
+                  aria-label={label}
                 >
                   <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white transition-transform shadow ${prefs[key] ? 'translate-x-5' : 'translate-x-0.5'}`} />
                 </button>

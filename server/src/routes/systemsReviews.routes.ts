@@ -1,3 +1,4 @@
+import { logAi, AI_EXPLANATIONS } from '../utils/aiGov';
 import { Router } from 'express';
 import { v4 as uuid } from 'uuid';
 import multer from 'multer';
@@ -81,6 +82,7 @@ router.post(
 // PUT /api/v1/systems-reviews/:id/status — move through InProgress / UnderApproval / Approved / Closed
 router.put(
   '/:id/status',
+  requireRole('SYSTEMS_REVIEWER', 'MANAGER_COMPLIANCE', 'GM_PREVENTION', 'PROVINCIAL_HEAD', 'SUPER_ADMIN'),
   asyncHandler(async (req, res) => {
     const { status, executiveSummary } = req.body || {};
     const allowed = ['Draft', 'InProgress', 'UnderApproval', 'Approved', 'Closed'];
@@ -88,8 +90,8 @@ router.put(
     const review = db.prepare(`SELECT * FROM systems_reviews WHERE id = ?`).get(req.params.id) as any;
     if (!review) return res.status(404).json({ error: 'Systems review not found' });
 
-    if (status === 'Approved' && !['PREVENTION_HEAD', 'SUPER_ADMIN'].includes(req.user!.role)) {
-      return res.status(403).json({ error: 'Only the Prevention Head can approve a systems review' });
+    if (status === 'Approved' && !['GM_PREVENTION', 'SUPER_ADMIN'].includes(req.user!.role)) {
+      return res.status(403).json({ error: 'Only the General Manager, Prevention and Corporate Governance can approve a systems review' });
     }
 
     let slaDue: string | null = null;
@@ -104,12 +106,14 @@ router.put(
       status, executiveSummary || null, completedAt, req.params.id
     );
     if (executiveSummary) {
-      db.prepare(`UPDATE systems_reviews SET ai_summary = ? WHERE id = ?`).run(summarize(executiveSummary, 3), req.params.id);
+      const sum = summarize(executiveSummary, 3);
+      db.prepare(`UPDATE systems_reviews SET ai_summary = ? WHERE id = ?`).run(sum, req.params.id);
+      logAi({ feature: 'review_summary', entityType: 'systems_review', entityId: req.params.id, institutionId: (review as any).institution_id, input: `${executiveSummary.length} characters`, output: sum, factors: { sentencesKept: 3 }, userId: req.user!.sub });
     }
     recordTransition({ entityType: 'systems_review', entityId: req.params.id, fromState: review.status, toState: status, actorUserId: req.user!.sub });
 
     if (status === 'UnderApproval') {
-      notifyRole('PREVENTION_HEAD', 'SYSTEMS_REVIEW_ASSIGNED', { title: review.title, institutionName: '' }, 'systems_review', req.params.id);
+      notifyRole('GM_PREVENTION', 'SYSTEMS_REVIEW_ASSIGNED', { title: review.title, institutionName: '' }, 'systems_review', req.params.id);
     }
     writeAudit({ userId: req.user!.sub, action: 'SYSTEMS_REVIEW_STATUS_CHANGED', entityType: 'systems_review', entityId: req.params.id, details: { status } });
     res.json({ ok: true, status });
@@ -119,6 +123,7 @@ router.put(
 // POST /api/v1/systems-reviews/:id/documents — new document (first version)
 router.post(
   '/:id/documents',
+  requireRole('SYSTEMS_REVIEWER', 'MANAGER_COMPLIANCE', 'GM_PREVENTION', 'PROVINCIAL_HEAD', 'SUPER_ADMIN'),
   upload.single('file'),
   asyncHandler(async (req, res) => {
     const { title } = req.body || {};
@@ -136,6 +141,7 @@ router.post(
 // POST /api/v1/systems-reviews/:id/documents/:docId/versions — new version (version control)
 router.post(
   '/:id/documents/:docId/versions',
+  requireRole('SYSTEMS_REVIEWER', 'MANAGER_COMPLIANCE', 'GM_PREVENTION', 'PROVINCIAL_HEAD', 'SUPER_ADMIN'),
   upload.single('file'),
   asyncHandler(async (req, res) => {
     const { changeNote } = req.body || {};
@@ -164,6 +170,7 @@ router.get(
 // POST /api/v1/systems-reviews/:id/findings — create a finding, running AI-02 duplicate detection first
 router.post(
   '/:id/findings',
+  requireRole('SYSTEMS_REVIEWER', 'MANAGER_COMPLIANCE', 'GM_PREVENTION', 'PROVINCIAL_HEAD', 'SUPER_ADMIN'),
   asyncHandler(async (req, res) => {
     const { findingText, category, severity, evidenceRef } = req.body || {};
     if (!findingText) return res.status(400).json({ error: 'findingText is required' });
@@ -177,7 +184,8 @@ router.post(
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`
     ).run(id, req.params.id, findingText, category || null, severity || 'Medium', evidenceRef || null, matches[0]?.id || null, matches[0]?.score || null, req.user!.sub);
 
-    res.status(201).json({ id, possibleDuplicates: matches.slice(0, 5) });
+    if (matches.length) logAi({ feature: 'duplicate_detection', entityType: 'systems_review_finding', entityId: id, input: findingText, output: JSON.stringify(matches.slice(0, 5)), factors: { topScore: matches[0].score, matchesFound: matches.length }, confidence: matches[0].score, userId: req.user!.sub });
+    res.status(201).json({ id, possibleDuplicates: matches.slice(0, 5), explanation: AI_EXPLANATIONS.duplicate_detection });
   })
 );
 

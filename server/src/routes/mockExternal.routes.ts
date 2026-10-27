@@ -17,7 +17,7 @@ import { db } from '../db';
 
 const router = Router();
 router.use(authenticate);
-router.use(requireRole('SUPER_ADMIN', 'INVESTIGATIONS_OFFICER', 'PREVENTION_HEAD'));
+router.use(requireRole('SUPER_ADMIN', 'INVESTIGATIONS_OFFICER', 'GM_PREVENTION'));
 
 // POST /api/v1/mock-external/ecms/case — mirrors what whistleblower.routes.ts /refer calls internally.
 // Live equivalent: POST https://ecms.zacc.gov.zw/api/cases

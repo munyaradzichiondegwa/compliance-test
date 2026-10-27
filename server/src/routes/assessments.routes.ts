@@ -1,3 +1,4 @@
+import { logAi } from '../utils/aiGov';
 import { Router } from 'express';
 import { v4 as uuid } from 'uuid';
 import multer from 'multer';
@@ -125,6 +126,7 @@ router.post(
 // PUT /api/v1/assessments/:id/checklist — autosave one or many item responses
 router.put(
   '/:id/checklist',
+  requireRole('COMPLIANCE_OFFICER', 'MANAGER_COMPLIANCE', 'PROVINCIAL_HEAD', 'SUPER_ADMIN'),
   asyncHandler(async (req, res) => {
     const assessment = db.prepare(`SELECT * FROM assessments WHERE id = ?`).get(req.params.id) as any;
     if (!assessment) return res.status(404).json({ error: 'Assessment not found' });
@@ -147,6 +149,7 @@ router.put(
 // POST /api/v1/assessments/:id/evidence — multipart upload
 router.post(
   '/:id/evidence',
+  requireRole('COMPLIANCE_OFFICER', 'MANAGER_COMPLIANCE', 'PROVINCIAL_HEAD', 'SUPER_ADMIN'),
   upload.single('file'),
   asyncHandler(async (req, res) => {
     if (!req.file) return res.status(400).json({ error: 'file is required (multipart/form-data field "file")' });
@@ -175,6 +178,7 @@ router.get(
 // PUT /api/v1/assessments/:id/geotag
 router.put(
   '/:id/geotag',
+  requireRole('COMPLIANCE_OFFICER', 'MANAGER_COMPLIANCE', 'PROVINCIAL_HEAD', 'SUPER_ADMIN'),
   asyncHandler(async (req, res) => {
     const { lat, lng } = req.body || {};
     if (lat === undefined || lng === undefined) return res.status(400).json({ error: 'lat and lng are required' });
@@ -186,6 +190,7 @@ router.put(
 // POST /api/v1/assessments/:id/ai-draft — AI-03 auto-draft narrative from checklist data
 router.post(
   '/:id/ai-draft',
+  requireRole('COMPLIANCE_OFFICER', 'MANAGER_COMPLIANCE', 'PROVINCIAL_HEAD', 'SUPER_ADMIN'),
   asyncHandler(async (req, res) => {
     const assessment = db.prepare(`SELECT a.*, i.name as institution_name FROM assessments a JOIN institutions i ON i.id = a.institution_id WHERE a.id = ?`).get(req.params.id) as any;
     if (!assessment) return res.status(404).json({ error: 'Assessment not found' });
@@ -198,14 +203,20 @@ router.post(
       ragStatus: assessment.rag_status || 'Amber',
       items,
     });
-    db.prepare(`UPDATE assessments SET findings_text = ?, ai_summary = ?, updated_at = datetime('now') WHERE id = ?`).run(narrative, summarize(narrative, 2), req.params.id);
-    res.json({ narrative });
+    // The draft is a proposal: it is stored in ai_summary and only becomes the assessment's findings text when a
+    // human accepts/modifies it via POST /ai-governance/decisions/:id/review (or when no findings text exists yet).
+    const nonC = items.filter((i: any) => i.response === 'NonCompliant').length;
+    const ai = logAi({ feature: 'assessment_narrative', entityType: 'assessment', entityId: assessment.id, institutionId: assessment.institution_id, input: `${items.length} checklist items`, output: narrative,
+      factors: { compositeScore: assessment.composite_score, ragStatus: assessment.rag_status, nonCompliantItems: nonC, partiallyCompliantItems: items.filter((i: any) => i.response === 'PartiallyCompliant').length }, confidence: 'n/a (deterministic)', userId: req.user!.sub });
+    db.prepare(`UPDATE assessments SET ai_summary = ?, findings_text = COALESCE(NULLIF(findings_text, ''), ?), updated_at = datetime('now') WHERE id = ?`).run(summarize(narrative, 2), narrative, req.params.id);
+    res.json({ narrative, aiDecisionId: ai.id, explanation: ai.explanation, requiresHumanReview: true });
   })
 );
 
 // PUT /api/v1/assessments/:id/submit
 router.put(
   '/:id/submit',
+  requireRole('COMPLIANCE_OFFICER', 'MANAGER_COMPLIANCE', 'PROVINCIAL_HEAD', 'SUPER_ADMIN'),
   asyncHandler(async (req, res) => {
     const assessment = db.prepare(`SELECT a.*, i.name as institution_name FROM assessments a JOIN institutions i ON i.id=a.institution_id WHERE a.id = ?`).get(req.params.id) as any;
     if (!assessment) return res.status(404).json({ error: 'Assessment not found' });
@@ -225,7 +236,7 @@ router.put(
     recordTransition({ entityType: 'assessment', entityId: req.params.id, fromState: assessment.status, toState: 'Submitted', actorUserId: req.user!.sub });
     writeAudit({ userId: req.user!.sub, action: 'ASSESSMENT_SUBMITTED', entityType: 'assessment', entityId: req.params.id, details: { composite, rag } });
 
-    notifyRole('PREVENTION_HEAD', 'ASSESSMENT_SUBMITTED', {
+    notifyRole('GM_PREVENTION', 'ASSESSMENT_SUBMITTED', {
       institutionName: assessment.institution_name,
       officerName: req.user!.name,
       score: composite.toFixed(1),
@@ -240,7 +251,7 @@ router.put(
 // PUT /api/v1/assessments/:id/review — approve or return
 router.put(
   '/:id/review',
-  requireRole('PREVENTION_HEAD', 'SUPER_ADMIN'),
+  requireRole('GM_PREVENTION', 'SUPER_ADMIN'),
   asyncHandler(async (req, res) => {
     const { decision, notes } = req.body || {}; // decision: 'approve' | 'return'
     const assessment = db.prepare(`SELECT a.*, i.name as institution_name FROM assessments a JOIN institutions i ON i.id=a.institution_id WHERE a.id = ?`).get(req.params.id) as any;

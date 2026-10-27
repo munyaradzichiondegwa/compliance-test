@@ -7,7 +7,9 @@ export function toCsv(rows: Record<string, unknown>[]): string {
   const headers = Object.keys(rows[0]);
   const escape = (val: unknown): string => {
     if (val === null || val === undefined) return '';
-    const str = String(val);
+    let str = String(val);
+    // Neutralise spreadsheet formula injection (=, +, -, @ prefixes)
+    if (/^[=+\-@\t\r]/.test(str) && Number.isNaN(Number(str))) str = `'${str}`;
     if (str.includes(',') || str.includes('"') || str.includes('\n')) {
       return `"${str.replace(/"/g, '""')}"`;
     }

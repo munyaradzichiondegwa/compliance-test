@@ -5,6 +5,8 @@ import { useAuth } from '../../context/AuthContext';
 import { useNotifications } from '../../context/NotificationContext';
 import { getNavForRole } from './navConfig';
 import { ROLE_LABELS } from '../../types';
+import { useT, LanguageSwitcher } from '../../i18n';
+import { useOnline } from '../../offline/useOnline';
 
 export default function AppLayout() {
   const { user, logout } = useAuth();
@@ -12,6 +14,8 @@ export default function AppLayout() {
   const { notifications, unreadCount, markRead, markAllRead } = useNotifications();
   const [bellOpen, setBellOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { t } = useT();
+  const online = useOnline();
 
   if (!user) return null;
   const navItems = getNavForRole(user.role);
@@ -23,6 +27,7 @@ export default function AppLayout() {
 
   return (
     <div className="min-h-screen flex bg-parchment">
+      <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:bg-gold focus:text-white focus:px-3 focus:py-2 focus:rounded">{t('common.skip')}</a>
       {/* Sidebar */}
       <aside className={`fixed lg:static inset-y-0 left-0 z-40 w-64 bg-charcoal text-parchment flex flex-col transition-transform duration-200 ${mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
         <div className="flex items-center gap-2.5 px-5 h-16 border-b border-white/10 shrink-0">
@@ -31,11 +36,11 @@ export default function AppLayout() {
             <div className="font-display font-semibold text-sm tracking-wide">ZACC Compliance</div>
             <div className="text-[10px] text-gold-light uppercase tracking-wider">Institutional Portal</div>
           </div>
-          <button className="ml-auto lg:hidden text-parchment/70" onClick={() => setMobileOpen(false)} aria-label="Close menu">
+          <button className="ml-auto lg:hidden text-parchment/70" onClick={() => setMobileOpen(false)} aria-label={t('common.closeMenu')}>
             <X size={20} />
           </button>
         </div>
-        <nav className="flex-1 overflow-y-auto py-3 px-3 space-y-0.5">
+        <nav className="flex-1 overflow-y-auto py-3 px-3 space-y-0.5" aria-label="Main">
           {navItems.map((item) => (
             <NavLink
               key={item.to}
@@ -47,8 +52,8 @@ export default function AppLayout() {
                 }`
               }
             >
-              <item.icon size={17} strokeWidth={2} />
-              {item.label}
+              <item.icon size={17} strokeWidth={2} aria-hidden />
+              {t(item.label)}
             </NavLink>
           ))}
         </nav>
@@ -63,15 +68,16 @@ export default function AppLayout() {
       {/* Main column */}
       <div className="flex-1 flex flex-col min-w-0">
         <header className="h-16 bg-paper border-b border-line flex items-center gap-3 px-4 lg:px-6 shrink-0 sticky top-0 z-20">
-          <button className="lg:hidden text-ink" onClick={() => setMobileOpen(true)} aria-label="Open menu">
+          <button className="lg:hidden text-ink" onClick={() => setMobileOpen(true)} aria-label={t('common.openMenu')}>
             <Menu size={22} />
           </button>
           <div className="flex-1" />
+          <LanguageSwitcher />
           <div className="relative">
             <button
               className="relative p-2 rounded hover:bg-parchment text-ink"
               onClick={() => setBellOpen((o) => !o)}
-              aria-label="Notifications"
+              aria-label={t('common.notifications')} aria-expanded={bellOpen}
             >
               <Bell size={19} />
               {unreadCount > 0 && (
@@ -118,10 +124,11 @@ export default function AppLayout() {
           </div>
           <button onClick={handleLogout} className="flex items-center gap-1.5 text-sm text-slate hover:text-status-red px-2 py-1.5 rounded transition-colors">
             <LogOut size={16} />
-            <span className="hidden sm:inline">Sign out</span>
+            <span className="hidden sm:inline">{t('common.signOut')}</span>
           </button>
         </header>
-        <main className="flex-1 p-4 lg:p-8 max-w-[1400px] w-full mx-auto">
+        {!online && <div role="status" className="bg-status-amber-bg text-status-amber text-xs px-4 py-2 border-b border-line">{t('common.offline')}</div>}
+        <main id="main" tabIndex={-1} className="flex-1 p-4 lg:p-8 max-w-[1400px] w-full mx-auto focus:outline-none">
           <Outlet />
         </main>
       </div>

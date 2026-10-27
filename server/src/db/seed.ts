@@ -71,7 +71,7 @@ const insertUser = db.prepare(`
 
 const users: SeedUser[] = [
   { id: uuid(), name: 'Tendai Chikafu', email: 'admin@zacc.gov.zw', role: 'SUPER_ADMIN', province: null, phone: '+263771000001' },
-  { id: uuid(), name: 'Farai Mutasa', email: 'prevention.head@zacc.gov.zw', role: 'PREVENTION_HEAD', province: null, phone: '+263771000002' },
+  { id: uuid(), name: 'General Manager Prevention', email: 'gm.prevention@zacc.gov.zw', role: 'GM_PREVENTION', province: null, phone: '+263771000002' },
   { id: uuid(), name: 'Rutendo Gwenzi', email: 'officer1@zacc.gov.zw', role: 'COMPLIANCE_OFFICER', province: 'Harare', phone: '+263771000003' },
   { id: uuid(), name: 'Tapiwa Ncube', email: 'officer2@zacc.gov.zw', role: 'COMPLIANCE_OFFICER', province: 'Midlands', phone: '+263771000004' },
   { id: uuid(), name: 'Chiedza Marufu', email: 'officer3@zacc.gov.zw', role: 'COMPLIANCE_OFFICER', province: 'Manicaland', phone: '+263771000005' },
@@ -82,6 +82,12 @@ const users: SeedUser[] = [
   { id: uuid(), name: 'Panashe Zulu', email: 'auditor@zacc.gov.zw', role: 'AUDITOR', province: null, phone: '+263771000010' },
   { id: uuid(), name: 'Kudzai Mangwana', email: 'oag.auditor@oag.gov.zw', role: 'AUDITOR', province: null, phone: '+263771000011' },
   { id: uuid(), name: 'Tanaka Museva', email: 'investigations@zacc.gov.zw', role: 'INVESTIGATIONS_OFFICER', province: null, phone: '+263771000012' },
+  // Approval chain for compliance checks: Provincial Head -> GM Prevention -> Executive Secretary
+  { id: uuid(), name: 'Manager Compliance', email: 'manager.compliance@zacc.gov.zw', role: 'MANAGER_COMPLIANCE', province: null, phone: '+263771000013' },
+  { id: uuid(), name: 'Provincial Head Masvingo', email: 'provincial.head@zacc.gov.zw', role: 'PROVINCIAL_HEAD', province: 'Masvingo', phone: '+263771000016' },
+  { id: uuid(), name: 'Prevention Committee Chair', email: 'prevention.committee@zacc.gov.zw', role: 'PREVENTION_COMMITTEE', province: null, phone: '+263771000017' },
+  { id: uuid(), name: 'Commission Chairperson', email: 'commission.chair@zacc.gov.zw', role: 'COMMISSION_CHAIR', province: null, phone: '+263771000018' },
+  { id: uuid(), name: 'Executive Secretary', email: 'exec.secretary@zacc.gov.zw', role: 'EXECUTIVE_SECRETARY', province: null, phone: '+263771000015' },
 ];
 
 // Institution Focal Persons and Integrity Committee Chairs are created after
@@ -243,16 +249,25 @@ const templates = [
   { code: 'ASSESSMENT_SUBMITTED', channel: 'email', subject: 'Assessment Submitted for Your Review: {{institutionName}}', body: '{{officerName}} has submitted a compliance assessment for {{institutionName}} (composite score {{score}}, status {{rag}}). Please review within {{slaDays}} working days.' },
   { code: 'ASSESSMENT_APPROVED', channel: 'email', subject: 'Assessment Approved: {{institutionName}}', body: 'Your compliance assessment for {{institutionName}} has been approved. {{recCount}} recommendation(s) have been auto-generated and issued to the institution.' },
   { code: 'ASSESSMENT_RETURNED', channel: 'email', subject: 'Assessment Returned for Revision: {{institutionName}}', body: 'Your assessment for {{institutionName}} was returned by {{reviewerName}} with the following notes: {{notes}}' },
-  { code: 'ASSESSMENT_ESCALATED', channel: 'sms', subject: 'Assessment Review Overdue', body: 'URGENT: The compliance assessment for {{institutionName}} has not been reviewed within the SLA and has been escalated to the Prevention Head.' },
+  { code: 'ASSESSMENT_ESCALATED', channel: 'sms', subject: 'Assessment Review Overdue', body: 'URGENT: The compliance assessment for {{institutionName}} has not been reviewed within the SLA and has been escalated to the General Manager, Prevention and Corporate Governance.' },
   { code: 'RECOMMENDATION_ASSIGNED', channel: 'email', subject: 'New Recommendation Issued: {{institutionName}}', body: 'A new recommendation has been issued to {{institutionName}}: "{{description}}". Please respond with evidence by {{dueDate}}.' },
   { code: 'RECOMMENDATION_REMINDER_30', channel: 'email', subject: 'Reminder: Recommendation Overdue — {{institutionName}}', body: 'This is a reminder that the recommendation "{{description}}" for {{institutionName}} is now {{daysOverdue}} days overdue. Please submit evidence of implementation.' },
   { code: 'RECOMMENDATION_REMINDER_60', channel: 'sms', subject: 'Recommendation 60 Days Overdue', body: 'NOTICE: The recommendation "{{description}}" for {{institutionName}} is now 60 days overdue. Escalation follows at 90 days.' },
-  { code: 'RECOMMENDATION_REMINDER_90_ESCALATION', channel: 'sms', subject: 'Recommendation 90+ Days Overdue — Escalated', body: 'ESCALATION: The recommendation "{{description}}" for {{institutionName}} is 90+ days overdue and has been escalated to the Prevention Head.' },
+  { code: 'RECOMMENDATION_REMINDER_90_ESCALATION', channel: 'sms', subject: 'Recommendation 90+ Days Overdue — Escalated', body: 'ESCALATION: The recommendation "{{description}}" for {{institutionName}} is 90+ days overdue and has been escalated to the General Manager, Prevention and Corporate Governance.' },
   { code: 'RECOMMENDATION_VERIFIED', channel: 'email', subject: 'Recommendation Verified & Closed', body: 'Your submitted evidence for "{{description}}" has been verified and the recommendation is now closed. Thank you.' },
   { code: 'RECOMMENDATION_REJECTED', channel: 'email', subject: 'Recommendation Evidence Insufficient', body: 'The evidence submitted for "{{description}}" was reviewed and found insufficient: {{notes}}. Please resubmit.' },
   { code: 'WHISTLEBLOWER_ASSIGNED', channel: 'email', subject: 'New Whistleblower Report Assigned', body: 'A new whistleblower report ({{trackingCode}}, category: {{category}}) has been assigned to you for triage.' },
   { code: 'PROCUREMENT_REDFLAG', channel: 'sms', subject: 'Procurement Red Flag Alert', body: 'ALERT: A procurement record for {{institutionName}} ({{description}}, ${{value}}) has triggered {{flagCount}} red flag(s). Review required within 48 hours.' },
   { code: 'PLEDGE_EXPIRY_REMINDER', channel: 'email', subject: 'Integrity Pledge Expiring Soon', body: 'The integrity pledge "{{title}}" signed by {{name}} is expiring on {{expiryDate}}. Please arrange renewal.' },
+  { code: 'ENGAGEMENT_STEP_REQUEST', channel: 'email', subject: 'Awaiting your decision: {{reference}}', body: '"{{title}}" ({{reference}}) awaits your action at the {{stage}} stage ({{flow}}). Please act within the SOP timeline.' },
+  { code: 'ENGAGEMENT_DECISION', channel: 'email', subject: 'Decision recorded: {{reference}}', body: 'A decision ({{decision}}) was recorded on "{{title}}" ({{reference}}) at the {{stage}} stage. {{notes}}' },
+  { code: 'ENGAGEMENT_ESCALATED', channel: 'sms', subject: 'Engagement step overdue', body: 'URGENT: "{{title}}" ({{reference}}) has waited at the {{stage}} stage beyond the SOP timeline and has been escalated.' },
+  { code: 'ENGAGEMENT_NOTICE_TO_INSTITUTION', channel: 'email', subject: 'Notification of ZACC exercise: {{reference}}', body: 'The Zimbabwe Anti-Corruption Commission has notified {{institutionName}} of an intended exercise ({{title}}) starting {{startDate}}. Please designate a focal person.' },
+  { code: 'ENGAGEMENT_MONITORING_NOTICE', channel: 'email', subject: 'Monitoring notice: {{reference}}', body: '{{institutionName}} will be monitored on implementation of the Implementation Matrix for "{{title}}". Please prepare evidence of implementation.' },
+  { code: 'ENGAGEMENT_MONITORING_DUE', channel: 'email', subject: 'Monitoring visit due: {{reference}}', body: 'The 3-month monitoring visit for {{institutionName}} ("{{title}}") is due on {{dueDate}}.' },
+  { code: 'ENGAGEMENT_LETTER_DUE', channel: 'email', subject: 'Notification letter pending signature: {{reference}}', body: 'The notification letter for {{institutionName}} ({{reference}}) has not been signed within 2 working days of approval.' },
+  { code: 'ENGAGEMENT_REPORT_DUE', channel: 'email', subject: 'Draft report overdue: {{reference}}', body: 'The draft report for {{institutionName}} ({{reference}}) was due within 5 working days of the exit meeting.' },
+  { code: 'IC_DELIVERABLE_DUE', channel: 'email', subject: 'Integrity Committee deliverable overdue', body: '{{institutionName}} has not submitted {{item}} (due {{dueDate}}).' },
   { code: 'SYSTEMS_REVIEW_ASSIGNED', channel: 'email', subject: 'Added to Systems Review: {{title}}', body: 'You have been added as a reviewer on the systems review "{{title}}" for {{institutionName}}.' },
 ];
 const insertTemplates = db.transaction(() => {
@@ -269,18 +284,19 @@ const insertWfConfig = db.prepare(`
   INSERT INTO workflow_configs (id, workflow_type, sla_days, escalate_to_role, reminder_intervals, updated_at)
   VALUES (@id, @workflowType, @slaDays, @escalateToRole, @reminderIntervals, datetime('now'))
 `);
-// Note on escalation targets: the Prevention Head acts as the approving
+// Note on escalation targets: the General Manager, Prevention and Corporate Governance acts as the approving
 // supervisor for assessments and systems reviews in this staffing model (the
-// PRD's own persona table folds "ZACC IT / Prevention Head" into the Super
+// PRD's own persona table folds "ZACC IT / General Manager Prevention" into the Super
 // Administrator description), so an overdue *approval* must escalate up to
 // Super Admin rather than back to the approver. Recommendation follow-through
 // and whistleblower triage are owned day-to-day by the Monitoring Officer and
-// Investigations Officer respectively, so those escalate up to the Prevention Head.
+// Investigations Officer respectively, so those escalate up to the General Manager, Prevention and Corporate Governance.
 const wfConfigs = [
   { workflowType: 'AssessmentReview', slaDays: 5, escalateToRole: 'SUPER_ADMIN', reminderIntervals: JSON.stringify([3, 5]) },
-  { workflowType: 'RecommendationResponse', slaDays: 14, escalateToRole: 'PREVENTION_HEAD', reminderIntervals: JSON.stringify([30, 60, 90]) },
+  { workflowType: 'RecommendationResponse', slaDays: 14, escalateToRole: 'GM_PREVENTION', reminderIntervals: JSON.stringify([30, 60, 90]) },
   { workflowType: 'SystemsReviewApproval', slaDays: 10, escalateToRole: 'SUPER_ADMIN', reminderIntervals: JSON.stringify([5, 10]) },
-  { workflowType: 'WhistleblowerTriage', slaDays: 7, escalateToRole: 'PREVENTION_HEAD', reminderIntervals: JSON.stringify([3, 7]) },
+  { workflowType: 'EngagementStep', slaDays: 3, escalateToRole: 'EXECUTIVE_SECRETARY', reminderIntervals: JSON.stringify([2, 3]) },
+  { workflowType: 'WhistleblowerTriage', slaDays: 7, escalateToRole: 'GM_PREVENTION', reminderIntervals: JSON.stringify([3, 7]) },
 ];
 const insertWfConfigs = db.transaction(() => {
   wfConfigs.forEach((c) => insertWfConfig.run({ id: uuid(), ...c }));
@@ -325,7 +341,7 @@ const CHECKLIST_TEMPLATE: { section: SectionKeyLocal; item_text: string }[] = [
 ];
 
 const complianceOfficers = users.filter((u) => u.role === 'COMPLIANCE_OFFICER');
-const preventionHead = users.find((u) => u.role === 'PREVENTION_HEAD')!;
+const preventionHead = users.find((u) => u.role === 'GM_PREVENTION')!;
 
 function officerForInstitution(inst: SeedInstitution) {
   return complianceOfficers.find((o) => o.province === inst.province) || pick(complianceOfficers);
@@ -1189,6 +1205,151 @@ const smsOptOutUser = users.find((u) => u.role === 'MONITORING_OFFICER');
 if (smsOptOutUser) {
   db.prepare(`INSERT INTO user_notification_preferences (user_id, channel, enabled) VALUES (?, 'sms', 0)`).run(smsOptOutUser.id);
   console.log(`Demo notification preference: ${smsOptOutUser.name} has opted out of SMS.`);
+}
+
+
+// ============================================================================
+// 11b. ENGAGEMENTS (SOP-driven) — legal library, red-flag library and demo
+//      engagements: a completed Chirundu-style spot check (Red, in monitoring),
+//      a Sanyati-style desk check (Amber), one awaiting the GM, one IC training,
+//      plus the monitoring registers (audit findings, funds, projects, IC).
+// ============================================================================
+{
+  const { LEGAL_REFERENCES, RED_FLAGS } = require('../engagement/sop');
+  const insRef = db.prepare(`INSERT INTO legal_references (id, instrument, provision, summary, applies_to) VALUES (?,?,?,?,?)`);
+  LEGAL_REFERENCES.forEach((r: string[]) => insRef.run(uuid(), r[0], r[1], r[2], r[3]));
+  const insRf = db.prepare(`INSERT INTO red_flag_indicators (id, category, indicator) VALUES (?,?,?)`);
+  RED_FLAGS.forEach((g: any) => g.indicators.forEach((i: string) => insRf.run(uuid(), g.category, i)));
+
+  const U = (role: string, n = 0) => users.filter((u) => u.role === role)[n];
+  const officer = U('COMPLIANCE_OFFICER'), officer2 = U('COMPLIANCE_OFFICER', 1), reviewer = U('SYSTEMS_REVIEWER');
+  const mgr = U('MANAGER_COMPLIANCE'), gm = U('GM_PREVENTION'), es = U('EXECUTIVE_SECRETARY'), pc = U('PREVENTION_COMMITTEE'), cc = U('COMMISSION_CHAIR');
+  const locals = db.prepare(`SELECT id, name FROM institutions ORDER BY (type='Local Authority') DESC, name LIMIT 6`).all() as { id: string; name: string }[];
+  const [inst1, inst2, inst3] = locals;
+
+  const insEng = db.prepare(`INSERT INTO engagements (id, reference, sop_type, method, scope_kind, institution_id, title, origin_source, origin_detail, location_type, background, rationale, scope_text, allegations, objectives, methodology, expected_outcomes, start_date, end_date, days, credibility, prelim_notes, prelim_completed_at, deployment_justified, status, current_step, step_due_at, notification_ref, notification_signed_at, im_status, compliance_level, conclusion, completed_at, monitoring_due_at, created_by, created_at) VALUES (@id,@reference,@sop_type,@method,@scope_kind,@institution_id,@title,@origin_source,@origin_detail,@location_type,@background,@rationale,@scope_text,@allegations,@objectives,@methodology,@expected_outcomes,@start_date,@end_date,@days,@credibility,@prelim_notes,@prelim_completed_at,@deployment_justified,@status,@current_step,@step_due_at,@notification_ref,@notification_signed_at,@im_status,@compliance_level,@conclusion,@completed_at,@monitoring_due_at,@created_by,@created_at)`);
+  const base = { method: null, scope_kind: null, origin_detail: null, location_type: 'HQ', background: null, rationale: null, scope_text: null, allegations: '[]', objectives: '[]', methodology: '[]', expected_outcomes: '[]', start_date: null, end_date: null, days: null, credibility: null, prelim_notes: null, prelim_completed_at: null, deployment_justified: null, current_step: null, step_due_at: null, notification_ref: null, notification_signed_at: null, im_status: 'None', compliance_level: null, conclusion: null, completed_at: null, monitoring_due_at: null, created_at: isoDaysAgo(30) } as any;
+  const J = JSON.stringify;
+  const team = db.prepare(`INSERT INTO engagement_team (id, engagement_id, user_id, name, team_role) VALUES (?,?,?,?,?)`);
+  const step = db.prepare(`INSERT INTO engagement_steps (id, engagement_id, flow, step, decision, comment, actor_user_id, on_time, created_at) VALUES (?,?,?,?,?,?,?,1,?)`);
+  const insFind = db.prepare(`INSERT INTO engagement_findings (id, engagement_id, seq, issue, finding_points, legal_reference, category, severity, compliance_rating, recommendation, responsibility, time_frame, due_date, referred_to_investigations, implementation_status) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`);
+  const insBud = db.prepare(`INSERT INTO engagement_budget_lines (id, engagement_id, item, unit, quantity, unit_cost, persons, days, sort_order) VALUES (?,?,?,?,?,?,?,?,?)`);
+  const insIt = db.prepare(`INSERT INTO engagement_itinerary (id, engagement_id, day_no, activity_date, location, activity, activity_type, distance_km, sort_order) VALUES (?,?,?,?,?,?,?,?,?)`);
+  const recIns = db.prepare(`INSERT INTO recommendations (id, source_type, source_id, institution_id, description, category, priority, owner_name, responsibility, time_frame, due_date, status) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`);
+  const day = (n: number) => new Date(Date.now() + n * 86400000).toISOString().slice(0, 10);
+  const iso = (n: number) => new Date(Date.now() + n * 86400000).toISOString();
+  const addBudget = (id: string, rows: [string, string, number, number, number, number][]) => rows.forEach((b, i) => insBud.run(uuid(), id, b[0], b[1], b[2], b[3], b[4], b[5], i));
+
+  // ---- E1: Chirundu-style comprehensive spot check, completed, Red, in monitoring window
+  const e1 = uuid();
+  insEng.run({ ...base, id: e1, reference: 'ZACC/CSR/2026/001', sop_type: 'ComplianceAssessment', method: 'PCC', scope_kind: 'Comprehensive', institution_id: inst1.id,
+    title: 'Comprehensive compliance check on procurement interference and council governance', origin_source: 'PublicComplaint', origin_detail: 'following allegations received from a member of the public',
+    background: 'The Zimbabwe Anti-Corruption Commission, through the Compliance, Systems and Processes Review Unit, is mandated under Section 12 of the Anti-Corruption Commission Act [Chapter 9:22] to carry out compliance spot checks and systems reviews in public and private institutions.',
+    scope_text: 'Procurement, recruitment, revenue management and council governance for the period 2025–2026.',
+    allegations: J(['Unprocedural interference by councillors in procurement adjudication', 'Unprocedural freezing of a recruited post', 'Weak internal controls over a revenue stream']),
+    objectives: J(['To ascertain the veracity of the allegations', 'To examine the extent of interference in administration, recruitment and procurement processes', 'To proffer recommendations that enhance system efficiency']),
+    methodology: J(['Entrance meeting with the Accounting Officer', 'Interviews: Council Chairperson, committee chairpersons, Secretary, Procurement Officer, HR and Accounts staff', 'Document analysis: organisational structure, council resolutions, standard operating procedures', 'Exit meeting']),
+    expected_outcomes: J(['Compliance spot check report', 'Implementation Matrix signed by the client']),
+    start_date: day(-120), end_date: day(-118), days: 3, credibility: 'Credible', prelim_notes: 'Complaint corroborated by council minutes.', prelim_completed_at: iso(-125), deployment_justified: 1,
+    status: 'Completed', notification_ref: 'ZACC/PREV/CSR/2026/001', notification_signed_at: iso(-122), im_status: 'Signed', compliance_level: 'Red',
+    conclusion: 'The Local Authority is overwhelmed with corporate governance issues requiring urgent intervention and strategic planning.', completed_at: iso(-100), monitoring_due_at: day(-10), created_by: officer.id, created_at: iso(-130) });
+  team.run(uuid(), e1, officer.id, officer.name, 'FocalPerson'); team.run(uuid(), e1, officer2.id, officer2.name, 'TeamLeader');
+  [['Concept', 'TeamLeader', officer2.id], ['Concept', 'Manager', mgr.id], ['Concept', 'GM', gm.id], ['Concept', 'ExecutiveSecretary', es.id], ['IM', 'TeamLeader', officer2.id], ['IM', 'Manager', mgr.id], ['IM', 'GM', gm.id], ['IM', 'ExecutiveSecretary', es.id]]
+    .forEach(([f, s, u], i) => step.run(uuid(), e1, f, s, f === 'Concept' && s === 'ExecutiveSecretary' ? 'Approved' : 'Recommended', null, u, iso(-128 + i)));
+  const f1: [string, string[], string, string, string, string, string, string, string, number, string][] = [
+    ['Councillors rejecting the outcome of a procurement adjudication', ['Management adjudication recommended the lowest bidder at USD100 per hour.', 'Full Council resolved to award to a bidder charging USD280 per hour.', 'The resolution amounts to interference with the PMU procurement function.'], 'PPDPA Act s39', 'Procurement', 'High', 'NonCompliant', 'Further investigation should establish circumstances surrounding the resolution to award the contract to the higher bidder.', 'ZACC', 'Immediate', 1, 'Open'],
+    ['Unprocedural freezing of a recruited post', ['Authority to recruit was granted by the line Ministry.', 'Councillors rejected the selected candidate and froze the post by resolution.', 'Possible breach of Urban Councils Act sections 89 and 141(1)(a).'], 'UCA s89; s141(1)(a)', 'Governance', 'High', 'NonCompliant', 'Council should rescind the resolution and refer recruitment back to management.', 'Council', 'Immediate', 0, 'InProgress'],
+    ['Weak internal controls at revenue-generating truck stop', ['No cashiers; security guards receipt payments manually.', 'High risk of revenue leakage and pilferage.'], 'PFM Act', 'Internal Controls', 'High', 'NonCompliant', 'Employ cashiers and acquire electronic receipting devices.', 'Council Secretary', 'Immediate', 0, 'Open'],
+    ['Council operating without an internal audit section', ['Reliance on outsourced audit personnel.', 'High corruption risk with potential prejudice to Council.'], 'PFM Act', 'Internal Controls', 'Medium', 'PartiallyCompliant', 'Council should establish an internal audit section.', 'Council Secretary', '6 months', 0, 'Implemented'],
+    ['Under-staffed Procurement Management Unit', ['PMU has 2 officers, below the legal minimum of 3.'], 'PPDPA Act', 'Procurement', 'Medium', 'PartiallyCompliant', 'Increase the PMU to three officers.', 'Council Secretary', '3 months', 0, 'Implemented'],
+    ['Failure to acquit travel and subsistence', ['Chairperson paid vehicle operating costs for a trip; mode of travel disputed.', 'No acquittal made in violation of the PFM Act.'], 'PFM Act', 'Finance', 'Medium', 'NonCompliant', 'Further investigation to establish the mode of transport and any unlawful loss.', 'ZACC', 'Immediate', 1, 'Open'],
+  ];
+  f1.forEach((f, i) => {
+    const fid = uuid();
+    insFind.run(fid, e1, i + 1, f[0], J(f[1]), f[2], f[3], f[4], f[5], f[6], f[7], f[8], day(60), f[9], f[10]);
+    if (f[7] !== 'ZACC') {
+      const rid = uuid();
+      recIns.run(rid, 'Engagement', e1, inst1.id, f[6], f[3], f[4], f[7], f[7], f[8], day(60), 'Created');
+      db.prepare(`UPDATE engagement_findings SET recommendation_id = ? WHERE id = ?`).run(rid, fid);
+    }
+  });
+  db.prepare(`INSERT INTO engagement_meetings (id, engagement_id, kind, held_at, attendees, summary) VALUES (?,?,?,?,?,?)`).run(uuid(), e1, 'Entrance', iso(-120), 'Council Chairperson; Council Secretary; ZACC team', 'Scope and timetable explained; focal person designated.');
+  db.prepare(`INSERT INTO engagement_meetings (id, engagement_id, kind, held_at, attendees, summary) VALUES (?,?,?,?,?,?)`).run(uuid(), e1, 'Exit', iso(-118), 'Council Chairperson; Council Secretary; ZACC team', 'Preliminary findings shared.');
+  db.prepare(`INSERT INTO engagement_interviews (id, engagement_id, interviewee, position, interview_date, minutes, recorded_by) VALUES (?,?,?,?,?,?,?)`).run(uuid(), e1, 'Procurement Officer', 'PMU', day(-119), 'Confirmed that adjudication outcome was reversed by Full Council.', officer.id);
+
+  // ---- E2: Sanyati-style rapid desk check, Amber, completed (report flow)
+  const e2 = uuid();
+  insEng.run({ ...base, id: e2, reference: 'ZACC/CSR/2026/002', sop_type: 'ComplianceAssessment', method: 'RFD', scope_kind: 'DeskCheck', institution_id: inst2.id,
+    title: 'Rapid desk compliance check on ZINARA fund utilisation', origin_source: 'MediaReport', origin_detail: 'following media reports on the use of ZINARA funds',
+    allegations: J(['Misuse of ZINARA funds for the year ending 2024', 'Unprocedural selling of un-serviced land by the local authority']),
+    objectives: J(['Ascertain the allegations of misuse of ZINARA funds', 'Examine the veracity of the allegations on unprocedural sale of un-serviced land', 'Proffer recommendations']),
+    methodology: J(['Notification of the Chief Executive Officer', 'Interviews with the Auditor, the Engineer and ZINARA officials', 'Document analysis', 'Report writing']),
+    scope_text: 'Disbursements and acquittals of ZINARA funds for 2024.', start_date: day(-70), end_date: day(-69), days: 2, credibility: 'PartlyCredible', prelim_completed_at: iso(-75), deployment_justified: 1,
+    status: 'Monitoring', notification_ref: 'ZACC/PREV/CSR/2026/002', notification_signed_at: iso(-72), im_status: 'Signed', compliance_level: 'Amber',
+    conclusion: 'The allegations on ZINARA funds were administrative; the land matter was referred to Investigations.', completed_at: iso(-50), monitoring_due_at: day(40), created_by: officer.id, created_at: iso(-80) });
+  team.run(uuid(), e2, officer.id, officer.name, 'FocalPerson'); team.run(uuid(), e2, officer2.id, officer2.name, 'TeamLeader');
+  insFind.run(uuid(), e2, 1, 'Finance committee reporting of disbursements', J(['Variances between press-reported amounts and amounts reported to the finance committee were due to payment of legacy debt.']), 'PFM Act', 'Finance', 'Medium', 'PartiallyCompliant', 'Report interim and final disbursements transparently to the full council.', 'Council Secretary', '3 months', day(30), 0, 'InProgress');
+  insFind.run(uuid(), e2, 2, 'Sale of un-serviced land', J(['Matter is criminal and under investigation by the provincial investigations department.']), 'RDC Act', 'Governance', 'High', 'NonCompliant', 'Referred to the Investigations Department.', 'ZACC', 'Immediate', null, 1, 'Open');
+  [['Concept', 'Manager', mgr.id], ['Concept', 'GM', gm.id], ['Concept', 'ExecutiveSecretary', es.id], ['Report', 'TeamLeader', officer2.id], ['Report', 'Manager', mgr.id], ['Report', 'GM', gm.id], ['Report', 'PreventionCommittee', pc.id], ['Report', 'CommissionChair', cc.id]]
+    .forEach(([f, s, u], i) => step.run(uuid(), e2, f, s, s === 'ExecutiveSecretary' || s === 'CommissionChair' ? 'Approved' : 'Recommended', null, u, iso(-78 + i * 2)));
+
+  // ---- E3: pending GM concept review (approval chain demo, Provincial)
+  const e3 = uuid();
+  insEng.run({ ...base, id: e3, reference: 'ZACC/CSR/2026/003', sop_type: 'ComplianceAssessment', method: 'PCC', scope_kind: 'SpotCheck', institution_id: inst3.id, location_type: 'Provincial',
+    title: 'Rapid compliance spot check on procurement and revenue management', origin_source: 'RoutineProgramme',
+    background: 'Conducted as part of ZACC mandate to monitor and examine the practices, systems and procurement procedures of public institutions.', rationale: 'Routine compliance monitoring of Local Authorities in line with the annual work plan.',
+    scope_text: 'Procurement and revenue management, 2025–2026.',
+    objectives: J(['To assess compliance with the Public Procurement and Disposal of Public Assets Act', 'To assess revenue collection and banking controls', 'To proffer recommendations']),
+    methodology: J(['Interviews: Council officials and councillors', 'Document analysis', 'Physical verification of projects']),
+    expected_outcomes: J(['Spot check report', 'Implementation Matrix']),
+    start_date: day(14), end_date: day(17), days: 4, credibility: 'NotApplicable', prelim_completed_at: iso(-10), deployment_justified: 1,
+    status: 'ConceptReview', current_step: 'GM', step_due_at: iso(3), created_by: officer.id, created_at: iso(-12) });
+  team.run(uuid(), e3, officer.id, officer.name, 'FocalPerson'); team.run(uuid(), e3, officer2.id, officer2.name, 'TeamLeader'); team.run(uuid(), e3, reviewer.id, reviewer.name, 'Member');
+  [['Concept', 'TeamLeader', officer2.id], ['Concept', 'ProvincialHead', U('PROVINCIAL_HEAD').id], ['Concept', 'Manager', mgr.id]].forEach(([f, s, u], i) => step.run(uuid(), e3, f, s, 'Recommended', null, u, iso(-8 + i)));
+  addBudget(e3, [['Fuel', 'litres', 120, 1.6, 1, 1], ['Accommodation', 'night', 1, 60, 3, 3], ['Breakfast', 'meal', 1, 8, 3, 4], ['Lunch', 'meal', 1, 10, 3, 4], ['Dinner', 'meal', 1, 12, 3, 4]]);
+  [[1, day(14), 'Council offices', 'Entrance meeting and interviews with Council officials', 'EntranceMeeting', 0], [2, day(15), 'Growth point', 'Verification of projects and revenue points', 'Verification', 35], [3, day(16), 'Council offices', 'Document analysis and interviews', 'DocumentAnalysis', 0], [4, day(17), 'Council offices', 'Exit meeting and presentation', 'ExitMeeting', 0]]
+    .forEach((r: any, i) => insIt.run(uuid(), e3, r[0], r[1], r[2], r[3], r[4], r[5], i));
+
+  // ---- E4: IC training scheduled (Approved awaiting notification letter)
+  const e4 = uuid();
+  insEng.run({ ...base, id: e4, reference: 'ZACC/CSR/2026/004', sop_type: 'ICTraining', institution_id: inst1.id, title: 'Integrity Committee training',
+    origin_source: 'RoutineProgramme', background: 'Training of the Integrity Committee on its mandate, the corruption risk matrix and the integrity action plan.',
+    objectives: J(['Capacitate Integrity Committee members', 'Agree the deliverables due within 30 days']), methodology: J(['Facilitated training', 'Return form completed after training']), expected_outcomes: J(['IC return form', 'Risk matrix, action plan, charter and workplan within 30 days']),
+    start_date: day(21), end_date: day(24), days: 4, deployment_justified: 1, status: 'Approved', created_by: officer.id, created_at: iso(-5) });
+  team.run(uuid(), e4, officer.id, officer.name, 'FocalPerson'); team.run(uuid(), e4, officer2.id, officer2.name, 'TeamLeader');
+  db.prepare(`UPDATE engagements SET notification_due_at = ? WHERE id = ?`).run(iso(2), e4);
+  step.run(uuid(), e4, 'Concept', 'ExecutiveSecretary', 'Approved', null, es.id, iso(-1));
+
+  // ---- Certificate (an earlier fully-compliant client)
+  db.prepare(`INSERT INTO compliance_certificates (id, certificate_no, institution_id, issued_at, valid_until, issued_by) VALUES (?,?,?,?,?,?)`).run(uuid(), 'ZACC/COC/2026/001', locals[3].id, iso(-60), day(305), es.id);
+
+  // ---- Audit findings library (Auditor-General / IPSAS)
+  const af = db.prepare(`INSERT INTO audit_findings (id, institution_id, source, report_year, opinion, finding_text, ipsas_ref, category, amount_usd, repeat_finding, recommendation) VALUES (?,?,?,?,?,?,?,?,?,?,?)`);
+  af.run(uuid(), inst1.id, 'OAG', 2024, 'Qualified', 'Receivables from rates and licences are overstated; the council did not provide for doubtful debts.', 'IPSAS 29 / IPSAS 1', 'Finance', 410000, 1, 'Provide for doubtful debts and publish an aged-debtors analysis.');
+  af.run(uuid(), inst1.id, 'OAG', 2024, 'Qualified', 'Payroll deductions not remitted to third parties on time.', 'IPSAS 19', 'Payroll', 85000, 0, 'Remit statutory deductions within the legal period.');
+  af.run(uuid(), inst2.id, 'OAG', 2024, 'Adverse', 'Fixed asset register not maintained; assets not verified physically.', 'IPSAS 17', 'Assets', null, 1, 'Maintain and reconcile the fixed asset register annually.');
+  af.run(uuid(), inst2.id, 'InternalAudit', 2025, null, 'Procurement above thresholds without tender.', 'PPDPA Act', 'Procurement', 62000, 0, 'Enforce tendering above prescribed thresholds.');
+
+  // ---- Devolution / ZINARA acquittal tracker
+  const fd = db.prepare(`INSERT INTO fund_disbursements (id, institution_id, fund, fiscal_year, quarter, amount_disbursed, amount_spent, legacy_debt_paid, acquitted, acquittal_date, notes) VALUES (?,?,?,?,?,?,?,?,?,?,?)`);
+  fd.run(uuid(), inst2.id, 'ZINARA', 2024, 4, 2274623, 2274623, 1300000, 1, day(-200), 'Substantial portion applied to legacy contractor debt.');
+  fd.run(uuid(), inst1.id, 'Devolution', 2025, 1, 900000, 540000, 0, 0, null, 'Awaiting acquittal.');
+  fd.run(uuid(), inst3.id, 'Devolution', 2025, 2, 750000, 750000, 0, 1, day(-30), null);
+
+  // ---- Monitored government projects / programmes
+  const mp = db.prepare(`INSERT INTO monitored_programmes (id, kind, name, institution_id, source, scope, budget_usd, spent_usd, start_date, end_date, reported_progress, verified_progress, status) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`);
+  const p1 = uuid(); mp.run(p1, 'Project', 'Rural clinic upgrade', inst1.id, 'NationalPriority', 'Construction of a maternity wing', 480000, 390000, day(-300), day(60), 85, 60, 'Delayed');
+  mp.run(uuid(), 'Programme', 'Devolution-funded borehole drilling', inst3.id, 'NationalInterest', 'Drilling and equipping 40 boreholes', 220000, 120000, day(-200), day(120), 50, 48, 'Active');
+  db.prepare(`INSERT INTO programme_progress_reports (id, programme_id, period, reported_progress, spent_usd, narrative, verified_progress, verified_by, verified_at) VALUES (?,?,?,?,?,?,?,?,?)`).run(uuid(), p1, '2026-Q2', 85, 390000, 'Roofing complete.', 60, officer.id, iso(-20));
+
+  // ---- IC deliverables and quarterly reports
+  const ic = db.prepare(`SELECT id FROM integrity_committees ORDER BY created_at LIMIT 2`).all() as { id: string }[];
+  if (ic[0]) {
+    const dv = db.prepare(`INSERT INTO ic_deliverables (id, committee_id, item, due_date, submitted_at, status) VALUES (?,?,?,?,?,?)`);
+    dv.run(uuid(), ic[0].id, 'CorruptionRiskMatrix', day(-20), iso(-25), 'Submitted'); dv.run(uuid(), ic[0].id, 'IntegrityActionPlan', day(-5), null, 'Due'); dv.run(uuid(), ic[0].id, 'IntegrityCharter', day(12), null, 'Due'); dv.run(uuid(), ic[0].id, 'Workplan', day(12), null, 'Due');
+    db.prepare(`INSERT INTO ic_quarterly_reports (id, committee_id, period, summary, actions_completed, actions_planned) VALUES (?,?,?,?,?,?)`).run(uuid(), ic[0].id, '2026-Q2', 'Awareness sessions held; risk register updated.', 6, 9);
+  }
+  console.log('Seeded legal and red-flag libraries, 4 demo engagements and the monitoring registers.');
 }
 
 // ============================================================================

@@ -6,7 +6,7 @@ import { toCsv } from '../utils/csv';
 
 const router = Router();
 router.use(authenticate);
-router.use(requireRole('AUDITOR', 'SUPER_ADMIN', 'PREVENTION_HEAD'));
+router.use(requireRole('AUDITOR', 'SUPER_ADMIN', 'GM_PREVENTION'));
 
 // GET /api/v1/audit-logs
 router.get(

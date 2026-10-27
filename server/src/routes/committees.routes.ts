@@ -12,12 +12,16 @@ router.use(authenticate);
 router.get(
   '/',
   asyncHandler(async (req, res) => {
-    const { institutionId } = req.query as Record<string, string>;
+    const { institutionId, province } = req.query as Record<string, string>;
     let sql = `SELECT c.*, i.name as institution_name FROM integrity_committees c JOIN institutions i ON i.id = c.institution_id WHERE 1=1`;
     const params: any[] = [];
     if (institutionId) {
       sql += ` AND c.institution_id = ?`;
       params.push(institutionId);
+    }
+    if (province) {
+      sql += ` AND i.province = ?`;
+      params.push(province);
     }
     res.json(db.prepare(sql).all(...params));
   })
@@ -54,6 +58,7 @@ router.post(
 // PUT /api/v1/committees/:id/charter
 router.put(
   '/:id/charter',
+  requireRole('SUPER_ADMIN', 'GM_PREVENTION', 'MANAGER_COMPLIANCE', 'PROVINCIAL_HEAD', 'COMPLIANCE_OFFICER', 'SYSTEMS_REVIEWER', 'MONITORING_OFFICER', 'INTEGRITY_COMMITTEE_CHAIR'),
   asyncHandler(async (req, res) => {
     const { charterText } = req.body || {};
     db.prepare(`UPDATE integrity_committees SET charter_text = ? WHERE id = ?`).run(charterText || null, req.params.id);
@@ -64,6 +69,7 @@ router.put(
 // POST /api/v1/committees/:id/members
 router.post(
   '/:id/members',
+  requireRole('SUPER_ADMIN', 'GM_PREVENTION', 'MANAGER_COMPLIANCE', 'PROVINCIAL_HEAD', 'COMPLIANCE_OFFICER', 'SYSTEMS_REVIEWER', 'MONITORING_OFFICER', 'INTEGRITY_COMMITTEE_CHAIR'),
   asyncHandler(async (req, res) => {
     const { name, position, userId } = req.body || {};
     if (!name) return res.status(400).json({ error: 'name is required' });
@@ -76,6 +82,7 @@ router.post(
 // DELETE /api/v1/committees/:id/members/:memberId
 router.delete(
   '/:id/members/:memberId',
+  requireRole('SUPER_ADMIN', 'GM_PREVENTION', 'MANAGER_COMPLIANCE', 'PROVINCIAL_HEAD', 'COMPLIANCE_OFFICER', 'SYSTEMS_REVIEWER', 'MONITORING_OFFICER', 'INTEGRITY_COMMITTEE_CHAIR'),
   asyncHandler(async (req, res) => {
     db.prepare(`DELETE FROM committee_members WHERE id = ? AND committee_id = ?`).run(req.params.memberId, req.params.id);
     res.json({ ok: true });
@@ -85,6 +92,7 @@ router.delete(
 // POST /api/v1/committees/:id/trainings
 router.post(
   '/:id/trainings',
+  requireRole('SUPER_ADMIN', 'GM_PREVENTION', 'MANAGER_COMPLIANCE', 'PROVINCIAL_HEAD', 'COMPLIANCE_OFFICER', 'SYSTEMS_REVIEWER', 'MONITORING_OFFICER', 'INTEGRITY_COMMITTEE_CHAIR'),
   asyncHandler(async (req, res) => {
     const { memberId, trainingName, trainingDate, completed } = req.body || {};
     if (!trainingName) return res.status(400).json({ error: 'trainingName is required' });
@@ -97,6 +105,7 @@ router.post(
 // POST /api/v1/committees/:id/meetings
 router.post(
   '/:id/meetings',
+  requireRole('SUPER_ADMIN', 'GM_PREVENTION', 'MANAGER_COMPLIANCE', 'PROVINCIAL_HEAD', 'COMPLIANCE_OFFICER', 'SYSTEMS_REVIEWER', 'MONITORING_OFFICER', 'INTEGRITY_COMMITTEE_CHAIR'),
   asyncHandler(async (req, res) => {
     const { meetingDate, minutesText, attendeesCount } = req.body || {};
     if (!meetingDate) return res.status(400).json({ error: 'meetingDate is required' });
@@ -110,6 +119,7 @@ router.post(
 // POST /api/v1/committees/:id/action-plans
 router.post(
   '/:id/action-plans',
+  requireRole('SUPER_ADMIN', 'GM_PREVENTION', 'MANAGER_COMPLIANCE', 'PROVINCIAL_HEAD', 'COMPLIANCE_OFFICER', 'SYSTEMS_REVIEWER', 'MONITORING_OFFICER', 'INTEGRITY_COMMITTEE_CHAIR'),
   asyncHandler(async (req, res) => {
     const { description, owner, dueDate } = req.body || {};
     if (!description) return res.status(400).json({ error: 'description is required' });
@@ -122,6 +132,7 @@ router.post(
 // PUT /api/v1/committees/:id/action-plans/:planId
 router.put(
   '/:id/action-plans/:planId',
+  requireRole('SUPER_ADMIN', 'GM_PREVENTION', 'MANAGER_COMPLIANCE', 'PROVINCIAL_HEAD', 'COMPLIANCE_OFFICER', 'SYSTEMS_REVIEWER', 'MONITORING_OFFICER', 'INTEGRITY_COMMITTEE_CHAIR'),
   asyncHandler(async (req, res) => {
     const { status } = req.body || {};
     const allowed = ['Open', 'InProgress', 'Complete', 'Overdue'];

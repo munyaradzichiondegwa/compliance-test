@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { v4 as uuid } from 'uuid';
 import { db } from '../db';
-import { authenticate } from '../middleware/auth';
+import { authenticate, requireRole } from '../middleware/auth';
 import { asyncHandler } from '../middleware/errorHandler';
 import { writeAudit } from '../utils/audit';
 
@@ -12,7 +12,7 @@ router.use(authenticate);
 router.get(
   '/',
   asyncHandler(async (req, res) => {
-    const { institutionId } = req.query as Record<string, string>;
+    const { institutionId, province } = req.query as Record<string, string>;
     let sql = `SELECT p.*, i.name as institution_name,
                (SELECT COUNT(*) FROM pledge_signatories s WHERE s.pledge_id = p.id) as signatory_count
                FROM pledges p LEFT JOIN institutions i ON i.id = p.institution_id WHERE 1=1`;
@@ -20,6 +20,10 @@ router.get(
     if (institutionId) {
       sql += ` AND p.institution_id = ?`;
       params.push(institutionId);
+    }
+    if (province) {
+      sql += ` AND i.province = ?`;
+      params.push(province);
     }
     sql += ` ORDER BY p.expiry_date ASC`;
     res.json(db.prepare(sql).all(...params));
@@ -40,6 +44,7 @@ router.get(
 // POST /api/v1/pledges
 router.post(
   '/',
+  requireRole('SUPER_ADMIN', 'GM_PREVENTION', 'MANAGER_COMPLIANCE', 'PROVINCIAL_HEAD', 'COMPLIANCE_OFFICER', 'SYSTEMS_REVIEWER', 'MONITORING_OFFICER', 'INTEGRITY_COMMITTEE_CHAIR'),
   asyncHandler(async (req, res) => {
     const { institutionId, title, description, expiryDate } = req.body || {};
     if (!title) return res.status(400).json({ error: 'title is required' });
@@ -72,6 +77,7 @@ router.post(
 // POST /api/v1/pledges/:id/bulk-upload — CSV bulk import of signatories (large institutions, Section 10.1)
 router.post(
   '/:id/bulk-upload',
+  requireRole('SUPER_ADMIN', 'GM_PREVENTION', 'MANAGER_COMPLIANCE', 'PROVINCIAL_HEAD', 'COMPLIANCE_OFFICER', 'SYSTEMS_REVIEWER', 'MONITORING_OFFICER', 'INTEGRITY_COMMITTEE_CHAIR'),
   asyncHandler(async (req, res) => {
     const { rows } = req.body || {}; // [{name, position}] pre-parsed client-side from CSV
     if (!Array.isArray(rows) || rows.length === 0) return res.status(400).json({ error: 'rows must be a non-empty array of {name, position}' });
@@ -95,6 +101,39 @@ router.get(
   asyncHandler(async (_req, res) => {
     const rows = db.prepare(`SELECT p.*, i.name as institution_name FROM pledges p LEFT JOIN institutions i ON i.id = p.institution_id WHERE p.expiry_date IS NOT NULL AND p.expiry_date <= date('now', '+30 days') ORDER BY p.expiry_date ASC`).all();
     res.json(rows);
+  })
+);
+
+// PUT /api/v1/pledges/:id/ceremony — signing ceremony record (Pledge Signing SOP): Commissioner of Oaths and three signed
+// copies (individual, HR file, ZACC)
+router.put(
+  '/:id/ceremony',
+  requireRole('SUPER_ADMIN', 'GM_PREVENTION', 'MANAGER_COMPLIANCE', 'PROVINCIAL_HEAD', 'COMPLIANCE_OFFICER', 'SYSTEMS_REVIEWER', 'MONITORING_OFFICER', 'INTEGRITY_COMMITTEE_CHAIR'),
+  asyncHandler(async (req, res) => {
+    const { ceremonyDate, commissionerOfOaths, copiesPrinted } = req.body || {};
+    if (!ceremonyDate || !commissionerOfOaths) return res.status(400).json({ error: 'ceremonyDate and commissionerOfOaths are required' });
+    if (Number(copiesPrinted) !== 3) return res.status(400).json({ error: 'Three signed copies are required: one for the individual, one for the HR file and one for ZACC' });
+    const r = db.prepare(`UPDATE pledges SET ceremony_date = ?, commissioner_of_oaths = ?, copies_printed = 3 WHERE id = ?`).run(ceremonyDate, String(commissionerOfOaths), req.params.id);
+    if (!r.changes) return res.status(404).json({ error: 'Pledge not found' });
+    writeAudit({ userId: req.user!.sub, action: 'PLEDGE_CEREMONY_RECORDED', entityType: 'pledge', entityId: req.params.id });
+    res.json({ ok: true });
+  })
+);
+
+// POST /api/v1/pledges/:id/renew — annual renewal: pushes expiry one year and re-arms the reminder
+router.post(
+  '/:id/renew',
+  requireRole('SUPER_ADMIN', 'GM_PREVENTION', 'MANAGER_COMPLIANCE', 'PROVINCIAL_HEAD', 'COMPLIANCE_OFFICER', 'MONITORING_OFFICER', 'INTEGRITY_COMMITTEE_CHAIR'),
+  asyncHandler(async (req, res) => {
+    const p = db.prepare(`SELECT * FROM pledges WHERE id = ?`).get(req.params.id) as any;
+    if (!p) return res.status(404).json({ error: 'Pledge not found' });
+    const base = p.expiry_date && p.expiry_date > new Date().toISOString().slice(0, 10) ? new Date(p.expiry_date) : new Date();
+    base.setFullYear(base.getFullYear() + 1);
+    const expiry = base.toISOString().slice(0, 10);
+    db.prepare(`UPDATE pledges SET expiry_date = ? WHERE id = ?`).run(expiry, p.id);
+    db.prepare(`UPDATE pledge_signatories SET expiry_reminder_sent = 0 WHERE pledge_id = ?`).run(p.id);
+    writeAudit({ userId: req.user!.sub, action: 'PLEDGE_RENEWED', entityType: 'pledge', entityId: p.id, details: { expiry } });
+    res.json({ expiryDate: expiry });
   })
 );
 

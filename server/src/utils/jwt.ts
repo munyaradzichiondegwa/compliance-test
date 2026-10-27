@@ -1,5 +1,11 @@
 import jwt from 'jsonwebtoken';
 
+// Refuse to boot in production with the built-in development secrets.
+if (process.env.NODE_ENV === 'production') {
+  const missing = ['JWT_ACCESS_SECRET', 'JWT_REFRESH_SECRET', 'JWT_MFA_SECRET'].filter((k) => !process.env[k]);
+  if (missing.length) throw new Error(`Missing required secrets in production: ${missing.join(', ')}`);
+}
+
 const ACCESS_SECRET = process.env.JWT_ACCESS_SECRET || 'zacc-dev-access-secret-change-in-production';
 const REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'zacc-dev-refresh-secret-change-in-production';
 
@@ -8,6 +14,8 @@ export interface AccessTokenPayload {
   role: string;
   name: string;
   institutionId: string | null;
+  /** set while the account must choose a new password; only /auth routes work until then */
+  mcp?: boolean;
 }
 
 export function signAccessToken(payload: AccessTokenPayload): string {

@@ -49,7 +49,7 @@ export default function WhistleblowerReport() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    api.get('/institutions?limit=200', { skipAuth: true }).then((res) => setInstitutions(res.results)).catch(() => {});
+    api.get('/whistleblower/institutions', { skipAuth: true }).then((res) => setInstitutions(res)).catch(() => {});
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {

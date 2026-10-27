@@ -80,3 +80,13 @@ h1, h2, h3, h4, .font-display {
     @apply text-xs font-semibold uppercase tracking-widest text-gold;
   }
 }
+
+/* Print: plans, registers and matrices print as plain black-and-white pages without navigation chrome. */
+@media print {
+  aside, nav[aria-label="Main"], header, button, .btn-primary, .btn-outline, select, [role="tablist"], a[href="#main"] { display: none !important; }
+  body, main { background: #fff !important; color: #000 !important; }
+  .card { box-shadow: none !important; border: 1px solid #000 !important; break-inside: avoid; }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { border: 1px solid #000 !important; color: #000 !important; }
+  .badge-green, .badge-amber, .badge-red, .badge-slate { background: none !important; color: #000 !important; border: 1px solid #000 !important; }
+}

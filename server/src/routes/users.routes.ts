@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import { Router } from 'express';
 import { v4 as uuid } from 'uuid';
 import bcrypt from 'bcryptjs';
@@ -10,19 +11,20 @@ const router = Router();
 router.use(authenticate);
 
 const ROLES = [
-  'SUPER_ADMIN', 'PREVENTION_HEAD', 'COMPLIANCE_OFFICER', 'SYSTEMS_REVIEWER', 'MONITORING_OFFICER',
-  'INSTITUTION_FOCAL_PERSON', 'INTEGRITY_COMMITTEE_CHAIR', 'AUDITOR', 'INVESTIGATIONS_OFFICER',
+  'SUPER_ADMIN', 'COMMISSION_CHAIR', 'PREVENTION_COMMITTEE', 'EXECUTIVE_SECRETARY', 'GM_PREVENTION', 'MANAGER_COMPLIANCE', 'PROVINCIAL_HEAD',
+  'COMPLIANCE_OFFICER', 'SYSTEMS_REVIEWER', 'MONITORING_OFFICER', 'AUDITOR', 'INVESTIGATIONS_OFFICER', 'INSTITUTION_FOCAL_PERSON', 'INTEGRITY_COMMITTEE_CHAIR',
 ];
 
 // GET /api/v1/users — filtered by role, any authenticated user may look up
 // colleagues in a specific role (needed for reviewer/officer assignment
 // pickers throughout the app). Listing EVERYONE with no role filter remains
-// restricted to Super Admin / Prevention Head.
+// restricted to Super Admin / General Manager Prevention.
 router.get(
   '/',
   asyncHandler(async (req, res) => {
     const role = req.query.role as string | undefined;
-    if (!role && !['SUPER_ADMIN', 'PREVENTION_HEAD'].includes(req.user!.role)) {
+    if (['INSTITUTION_FOCAL_PERSON', 'INTEGRITY_COMMITTEE_CHAIR'].includes(req.user!.role)) return res.status(403).json({ error: 'Forbidden' });
+    if (!role && !['SUPER_ADMIN', 'GM_PREVENTION'].includes(req.user!.role)) {
       return res.status(403).json({ error: 'Forbidden — provide a role filter, or use an admin account to list all users' });
     }
     let sql = `SELECT id, name, email, phone, role, institution_id, mfa_enabled, is_active, province, created_at, last_login FROM users WHERE 1=1`;
@@ -52,11 +54,16 @@ router.post(
     const existing = db.prepare(`SELECT id FROM users WHERE email = ?`).get(String(email).toLowerCase());
     if (existing) return res.status(409).json({ error: 'A user with this email already exists' });
 
+    if (['INSTITUTION_FOCAL_PERSON', 'INTEGRITY_COMMITTEE_CHAIR'].includes(role) && !institutionId) return res.status(400).json({ error: 'Institution roles must be linked to an institution' });
+    if (role === 'PROVINCIAL_HEAD' && !province) return res.status(400).json({ error: 'A Provincial Head must be assigned a province' });
+    if (institutionId && !db.prepare(`SELECT 1 FROM institutions WHERE id = ?`).get(institutionId)) return res.status(400).json({ error: 'Unknown institution' });
+
     const id = uuid();
-    const tempPassword = password || 'ZaccDemo#2026';
+    // Never a shared default: generate a one-time password, shown once to the administrator; the user must change it at first sign-in.
+    const tempPassword: string = password && String(password).length >= 10 ? String(password) : `Zc-${crypto.randomBytes(6).toString('base64url')}#${crypto.randomInt(10, 99)}`;
     db.prepare(
-      `INSERT INTO users (id, name, email, phone, password_hash, role, institution_id, mfa_enabled, is_active, province, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, 0, 1, ?, datetime('now'))`
+      `INSERT INTO users (id, name, email, phone, password_hash, role, institution_id, mfa_enabled, is_active, province, must_change_password, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, 0, 1, ?, 1, datetime('now'))`
     ).run(id, name, String(email).toLowerCase(), phone || null, bcrypt.hashSync(tempPassword, 10), role, institutionId || null, province || null);
 
     writeAudit({ userId: req.user!.sub, action: 'USER_CREATED', entityType: 'user', entityId: id, details: { role } });
@@ -72,12 +79,15 @@ router.put(
     const { name, phone, role, institutionId, isActive, province } = req.body || {};
     const user = db.prepare(`SELECT * FROM users WHERE id = ?`).get(req.params.id);
     if (!user) return res.status(404).json({ error: 'User not found' });
+    if (role !== undefined && !ROLES.includes(role)) return res.status(400).json({ error: `role must be one of: ${ROLES.join(', ')}` });
+    if (req.params.id === req.user!.sub && (isActive === false || (role !== undefined && role !== 'SUPER_ADMIN'))) return res.status(400).json({ error: 'You cannot deactivate or demote your own account' });
 
     db.prepare(
       `UPDATE users SET name = COALESCE(?, name), phone = COALESCE(?, phone), role = COALESCE(?, role),
        institution_id = ?, is_active = COALESCE(?, is_active), province = COALESCE(?, province) WHERE id = ?`
     ).run(name ?? null, phone ?? null, role ?? null, institutionId ?? (user as any).institution_id, isActive === undefined ? null : isActive ? 1 : 0, province ?? null, req.params.id);
 
+    if (isActive === false || (role !== undefined && role !== (user as any).role)) db.prepare(`UPDATE refresh_tokens SET revoked = 1 WHERE user_id = ?`).run(req.params.id);
     writeAudit({ userId: req.user!.sub, action: 'USER_UPDATED', entityType: 'user', entityId: req.params.id });
     res.json({ ok: true });
   })
@@ -88,7 +98,9 @@ router.post(
   '/:id/reset-mfa',
   requireRole('SUPER_ADMIN'),
   asyncHandler(async (req, res) => {
+    if (!db.prepare(`SELECT 1 FROM users WHERE id = ?`).get(req.params.id)) return res.status(404).json({ error: 'User not found' });
     db.prepare(`UPDATE users SET mfa_enabled = 0, mfa_secret = NULL WHERE id = ?`).run(req.params.id);
+    db.prepare(`UPDATE refresh_tokens SET revoked = 1 WHERE user_id = ?`).run(req.params.id);
     writeAudit({ userId: req.user!.sub, action: 'MFA_RESET', entityType: 'user', entityId: req.params.id });
     res.json({ ok: true });
   })

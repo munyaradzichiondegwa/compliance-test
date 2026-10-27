@@ -15,6 +15,7 @@ const loginLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 10, keyPrefix: '
 const mfaLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 10, keyPrefix: 'mfa' });
 
 interface UserRow {
+  must_change_password?: number;
   id: string;
   name: string;
   email: string;
@@ -28,11 +29,11 @@ interface UserRow {
 }
 
 function sanitize(user: UserRow) {
-  return { id: user.id, name: user.name, email: user.email, phone: user.phone, role: user.role, institutionId: user.institution_id, mfaEnabled: !!user.mfa_enabled };
+  return { id: user.id, name: user.name, email: user.email, phone: user.phone, role: user.role, institutionId: user.institution_id, mfaEnabled: !!user.mfa_enabled, mustChangePassword: !!user.must_change_password, province: (user as any).province ?? null };
 }
 
 function issueSession(user: UserRow, res: any) {
-  const access = signAccessToken({ sub: user.id, role: user.role, name: user.name, institutionId: user.institution_id });
+  const access = signAccessToken({ sub: user.id, role: user.role, name: user.name, institutionId: user.institution_id, ...(user.must_change_password ? { mcp: true } : {}) });
   const refresh = signRefreshToken(user.id);
   const refreshHash = bcrypt.hashSync(refresh, 8);
   db.prepare(`INSERT INTO refresh_tokens (id, user_id, token_hash, expires_at, created_at) VALUES (?, ?, ?, datetime('now', '+7 days'), datetime('now'))`).run(uuid(), user.id, refreshHash);
@@ -147,7 +148,7 @@ router.post(
     const user = db.prepare(`SELECT * FROM users WHERE id = ?`).get(decoded.sub) as UserRow | undefined;
     if (!user || !user.is_active) return res.status(401).json({ error: 'Account not available' });
 
-    const access = signAccessToken({ sub: user.id, role: user.role, name: user.name, institutionId: user.institution_id });
+    const access = signAccessToken({ sub: user.id, role: user.role, name: user.name, institutionId: user.institution_id, ...(user.must_change_password ? { mcp: true } : {}) });
     return res.json({ accessToken: access, user: sanitize(user) });
   })
 );
@@ -189,13 +190,16 @@ router.post(
   asyncHandler(async (req, res) => {
     const { currentPassword, newPassword } = req.body || {};
     if (!currentPassword || !newPassword) return res.status(400).json({ error: 'currentPassword and newPassword are required' });
-    if (String(newPassword).length < 8) return res.status(400).json({ error: 'New password must be at least 8 characters' });
+    const np = String(newPassword);
+    if (np.length < 10 || !/[a-z]/.test(np) || !/[A-Z]/.test(np) || !/\d/.test(np)) return res.status(400).json({ error: 'New password must be at least 10 characters and include upper-case, lower-case and a digit' });
+    if (np === String(currentPassword)) return res.status(400).json({ error: 'New password must differ from the current password' });
     const user = db.prepare(`SELECT * FROM users WHERE id = ?`).get(req.user!.sub) as UserRow;
     if (!bcrypt.compareSync(currentPassword, user.password_hash)) return res.status(401).json({ error: 'Current password is incorrect' });
     const newHash = bcrypt.hashSync(newPassword, 10);
-    db.prepare(`UPDATE users SET password_hash = ? WHERE id = ?`).run(newHash, user.id);
+    db.prepare(`UPDATE users SET password_hash = ?, must_change_password = 0 WHERE id = ?`).run(newHash, user.id);
+    db.prepare(`UPDATE refresh_tokens SET revoked = 1 WHERE user_id = ?`).run(user.id); // sign out every other session
     writeAudit({ userId: user.id, action: 'PASSWORD_CHANGED', entityType: 'user', entityId: user.id });
-    return res.json({ ok: true });
+    return issueSession({ ...user, must_change_password: 0 }, res);
   })
 );
 
