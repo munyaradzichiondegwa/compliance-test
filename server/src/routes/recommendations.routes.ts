@@ -16,7 +16,7 @@ const upload = multer({ dest: UPLOADS_DIR, limits: { fileSize: 15 * 1024 * 1024 
 router.get(
   '/',
   asyncHandler(async (req, res) => {
-    const { status, institutionId, overdue, mine } = req.query as Record<string, string>;
+    const { status, institutionId, overdue, mine, province } = req.query as Record<string, string>;
     let sql = `SELECT r.*, i.name as institution_name, i.province, u.name as assigned_to_name FROM recommendations r
                JOIN institutions i ON i.id = r.institution_id LEFT JOIN users u ON u.id = r.assigned_to_user_id WHERE 1=1`;
     const params: any[] = [];
@@ -27,6 +27,10 @@ router.get(
     if (institutionId) {
       sql += ` AND r.institution_id = ?`;
       params.push(institutionId);
+    }
+    if (province) {
+      sql += ` AND i.province = ?`;
+      params.push(province);
     }
     if (overdue === 'true') {
       sql += ` AND r.due_date < date('now') AND r.status NOT IN ('Closed','Verified')`;
@@ -46,10 +50,11 @@ router.get(
 router.get(
   '/register/export.csv',
   asyncHandler(async (req, res) => {
+    const province = (req.query.province as string) || null;
     const rows = db.prepare(`
-      SELECT r.description, i.name as institution, i.province, r.category, r.priority, r.owner_name, r.due_date, r.status, r.escalation_level
-      FROM recommendations r JOIN institutions i ON i.id = r.institution_id ORDER BY r.due_date ASC
-    `).all();
+      SELECT r.description, i.name as institution, i.province, r.category, r.priority, r.owner_name, r.responsibility, r.time_frame, r.source_type, r.due_date, r.status, r.escalation_level
+      FROM recommendations r JOIN institutions i ON i.id = r.institution_id WHERE (? IS NULL OR i.province = ?) ORDER BY r.due_date ASC
+    `).all(province, province);
     const csv = toCsv(rows as any[]);
     res.setHeader('Content-Type', 'text/csv');
     res.setHeader('Content-Disposition', 'attachment; filename="Recommendation_Register.csv"');
@@ -79,6 +84,7 @@ router.put(
     if (!['Assigned', 'Created', 'Incomplete'].includes(rec.status)) return res.status(400).json({ error: `Cannot respond from status ${rec.status}` });
 
     db.prepare(`UPDATE recommendations SET status = 'ResponseSubmitted', response_text = ?, responded_at = datetime('now'), updated_at = datetime('now') WHERE id = ?`).run(responseText, req.params.id);
+    syncFinding(req.params.id, 'Implemented');
     recordTransition({ entityType: 'recommendation', entityId: req.params.id, fromState: rec.status, toState: 'ResponseSubmitted', actorUserId: req.user!.sub });
     notifyRole('MONITORING_OFFICER', 'RECOMMENDATION_ASSIGNED', { institutionName: rec.institution_name, description: rec.description, dueDate: rec.due_date }, 'recommendation', req.params.id);
     writeAudit({ userId: req.user!.sub, action: 'RECOMMENDATION_RESPONSE_SUBMITTED', entityType: 'recommendation', entityId: req.params.id });
@@ -87,8 +93,14 @@ router.put(
 );
 
 // POST /api/v1/recommendations/:id/evidence
+/** Keeps the Implementation Matrix row in step with the recommendation it spawned. */
+function syncFinding(recId: string, status: 'Implemented' | 'Verified' | 'NotImplemented') {
+  db.prepare(`UPDATE engagement_findings SET implementation_status = ?, verified_at = CASE WHEN ? = 'Verified' THEN datetime('now') ELSE verified_at END WHERE recommendation_id = ?`).run(status, status, recId);
+}
+
 router.post(
   '/:id/evidence',
+  requireRole('INSTITUTION_FOCAL_PERSON', 'MONITORING_OFFICER', 'SUPER_ADMIN'),
   upload.single('file'),
   asyncHandler(async (req, res) => {
     if (!req.file) return res.status(400).json({ error: 'file is required' });
@@ -109,6 +121,7 @@ router.put(
 
     if (decision === 'reject') {
       db.prepare(`UPDATE recommendations SET status = 'Incomplete', verification_notes = ?, updated_at = datetime('now') WHERE id = ?`).run(notes || null, req.params.id);
+      syncFinding(req.params.id, 'NotImplemented');
       recordTransition({ entityType: 'recommendation', entityId: req.params.id, fromState: 'ResponseSubmitted', toState: 'Incomplete', actorUserId: req.user!.sub, reason: notes });
       if (rec.assigned_to_user_id) notifyUser(rec.assigned_to_user_id, 'RECOMMENDATION_REJECTED', { description: rec.description, notes: notes || 'Insufficient evidence' }, 'recommendation', req.params.id);
       writeAudit({ userId: req.user!.sub, action: 'RECOMMENDATION_REJECTED', entityType: 'recommendation', entityId: req.params.id });
@@ -116,6 +129,7 @@ router.put(
     }
 
     db.prepare(`UPDATE recommendations SET status = 'Closed', verified_by = ?, verified_at = datetime('now'), verification_notes = ?, updated_at = datetime('now') WHERE id = ?`).run(req.user!.sub, notes || null, req.params.id);
+    syncFinding(req.params.id, 'Verified');
     recordTransition({ entityType: 'recommendation', entityId: req.params.id, fromState: 'ResponseSubmitted', toState: 'Closed', actorUserId: req.user!.sub });
     if (rec.assigned_to_user_id) notifyUser(rec.assigned_to_user_id, 'RECOMMENDATION_VERIFIED', { description: rec.description }, 'recommendation', req.params.id);
     writeAudit({ userId: req.user!.sub, action: 'RECOMMENDATION_VERIFIED', entityType: 'recommendation', entityId: req.params.id });

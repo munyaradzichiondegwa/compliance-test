@@ -26,6 +26,11 @@ import reportsRoutes from './routes/reports.routes';
 import aiRoutes from './routes/ai.routes';
 import mockExternalRoutes from './routes/mockExternal.routes';
 import adminRoutes from './routes/admin.routes';
+import { authenticate } from './middleware/auth';
+import { scope, staffOnly } from './middleware/scope';
+import engagementsRoutes from './routes/engagements.routes';
+import monitoringRoutes from './routes/monitoring.routes';
+import aiGovernanceRoutes from './routes/aiGovernance.routes';
 
 export function createApp() {
   const app = express();
@@ -51,26 +56,33 @@ export function createApp() {
   app.get('/health', (_req, res) => res.json({ ok: true, service: 'ZACC Compliance Portal API', time: new Date().toISOString() }));
 
   const v1 = express.Router();
+  // Public: authentication, whistleblower submission/tracking, and the aggregate province map.
   v1.use('/auth', authRoutes);
-  v1.use('/users', usersRoutes);
-  v1.use('/institutions', institutionsRoutes);
-  v1.use('/assessments', assessmentsRoutes);
-  v1.use('/systems-reviews', systemsReviewsRoutes);
-  v1.use('/recommendations', recommendationsRoutes);
-  v1.use('/committees', committeesRoutes);
-  v1.use('/pledges', pledgesRoutes);
   v1.use('/whistleblower', whistleblowerRoutes);
-  v1.use('/risk-register', riskRegisterRoutes);
-  v1.use('/procurement', procurementRoutes);
+  v1.use('/gis', (req, res, next) => (req.path === '/provinces' ? next() : authenticate(req, res, () => staffOnly(req, res, next))), gisRoutes);
+
+  // Everything below needs a signed-in user. Institution users are limited to their own institution's records
+  // (scope) and locked out of staff-only modules (staffOnly); Provincial Heads are limited to their province.
+  v1.use('/users', usersRoutes);
+  v1.use('/institutions', authenticate, scope('institutions'), institutionsRoutes);
+  v1.use('/assessments', authenticate, scope('assessments'), assessmentsRoutes);
+  v1.use('/systems-reviews', authenticate, staffOnly, systemsReviewsRoutes);
+  v1.use('/recommendations', authenticate, scope('recommendations'), recommendationsRoutes);
+  v1.use('/committees', authenticate, scope('integrity_committees'), committeesRoutes);
+  v1.use('/pledges', authenticate, scope('pledges'), pledgesRoutes);
+  v1.use('/risk-register', authenticate, scope('corruption_risks'), riskRegisterRoutes);
+  v1.use('/procurement', authenticate, staffOnly, procurementRoutes);
   v1.use('/notifications', notificationsRoutes);
-  v1.use('/workflow-configs', workflowConfigRoutes);
-  v1.use('/gis', gisRoutes);
+  v1.use('/workflow-configs', authenticate, staffOnly, workflowConfigRoutes);
   v1.use('/dashboard', dashboardRoutes);
   v1.use('/audit-logs', auditRoutes);
-  v1.use('/reports', reportsRoutes);
-  v1.use('/ai', aiRoutes);
+  v1.use('/reports', authenticate, staffOnly, reportsRoutes);
+  v1.use('/ai', authenticate, staffOnly, aiRoutes);
   v1.use('/mock-external', mockExternalRoutes);
   v1.use('/admin', adminRoutes);
+  v1.use('/engagements', engagementsRoutes);
+  v1.use('/monitoring', monitoringRoutes);
+  v1.use('/ai-governance', authenticate, staffOnly, aiGovernanceRoutes);
 
   app.use('/api/v1', v1);
 

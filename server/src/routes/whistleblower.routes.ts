@@ -13,6 +13,14 @@ const router = Router();
 const submitLimiter = rateLimit({ windowMs: 60 * 60 * 1000, max: 8, keyPrefix: 'wb-submit' });
 const trackLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 20, keyPrefix: 'wb-track' });
 
+// GET /api/v1/whistleblower/institutions — PUBLIC minimal list for the report form's institution picker
+router.get(
+  '/institutions',
+  asyncHandler(async (_req, res) => {
+    res.json(db.prepare(`SELECT id, name, province FROM institutions WHERE status = 'Active' ORDER BY name`).all());
+  })
+);
+
 // GET /api/v1/whistleblower/public-key — PUBLIC, no auth. The browser fetches
 // this to encrypt the report client-side before anything is transmitted.
 router.get(
@@ -62,11 +70,11 @@ router.get(
 
 // ---------------------------------------------------------------------------
 // Everything below requires authentication and is restricted to the named
-// investigation team (INVESTIGATIONS_OFFICER, PREVENTION_HEAD, SUPER_ADMIN
+// investigation team (INVESTIGATIONS_OFFICER, GM_PREVENTION, SUPER_ADMIN
 // for administration) — PRD Section 20.3 "Restricted" tier.
 // ---------------------------------------------------------------------------
 router.use(authenticate);
-const CASE_ROLES = ['INVESTIGATIONS_OFFICER', 'PREVENTION_HEAD', 'SUPER_ADMIN'];
+const CASE_ROLES = ['INVESTIGATIONS_OFFICER', 'GM_PREVENTION', 'SUPER_ADMIN'];
 
 // GET /api/v1/whistleblower — list (metadata only, NOT decrypted content)
 router.get(

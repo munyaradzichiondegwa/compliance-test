@@ -1,3 +1,4 @@
+import jwt from 'jsonwebtoken';
 import { Request, Response, NextFunction } from 'express';
 
 // Lightweight in-memory sliding-window rate limiter — no external dependency
@@ -26,7 +27,13 @@ setInterval(() => {
 
 export function rateLimit(options: { windowMs: number; max: number; keyPrefix: string }) {
   return (req: Request, res: Response, next: NextFunction) => {
-    const identity = (req.body && req.body.email ? String(req.body.email).toLowerCase() : req.ip) || 'unknown';
+    // Bucket per account where possible (login email, or the user inside an MFA challenge token) so one shared office IP cannot lock everyone out.
+    let identity: string = (req.body && req.body.email ? String(req.body.email).toLowerCase() : '') as string;
+    if (!identity && req.body && typeof req.body.tempToken === 'string') {
+      const decoded: any = jwt.decode(req.body.tempToken);
+      if (decoded && decoded.sub) identity = `u:${decoded.sub}`;
+    }
+    identity = identity || req.ip || 'unknown';
     const key = `${options.keyPrefix}:${identity}`;
     const now = Date.now();
     const bucket = buckets.get(key);

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Plus, ShieldOff } from 'lucide-react';
 import { api } from '../../api/client';
 import { PageHeader, LoadingSpinner, Modal } from '../../components/common/UI';
-import { ROLE_LABELS, Role } from '../../types';
+import { ROLE_LABELS, Role, PROVINCES } from '../../types';
 
 const ROLES = Object.keys(ROLE_LABELS) as Role[];
 
@@ -73,17 +73,23 @@ export default function Users() {
 }
 
 function NewUserModal({ open, onClose, onCreated }: { open: boolean; onClose: () => void; onCreated: () => void }) {
-  const [form, setForm] = useState({ name: '', email: '', phone: '', role: 'COMPLIANCE_OFFICER' as Role });
+  const [form, setForm] = useState({ name: '', email: '', phone: '', role: 'COMPLIANCE_OFFICER' as Role, province: '', institutionId: '' });
+  const [institutions, setInstitutions] = useState<any[]>([]);
+  const [error, setError] = useState('');
+  useEffect(() => { if (open) api.get('/institutions?limit=200').then((r) => setInstitutions(r.results)).catch(() => {}); }, [open]);
   const [busy, setBusy] = useState(false);
   const [created, setCreated] = useState<any>(null);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setBusy(true);
+    setError('');
     try {
-      const res = await api.post('/users', form);
+      const res = await api.post('/users', { ...form, province: form.province || undefined, institutionId: form.institutionId || undefined });
       setCreated(res);
       onCreated();
+    } catch (err: any) {
+      setError(err.message || 'Could not create the user');
     } finally {
       setBusy(false);
     }
@@ -94,8 +100,8 @@ function NewUserModal({ open, onClose, onCreated }: { open: boolean; onClose: ()
       {created ? (
         <div className="text-center py-2">
           <div className="text-status-green font-medium mb-2">User created.</div>
-          <div className="text-xs text-slate mb-1">Temporary password:</div>
-          <div className="font-mono bg-parchment rounded px-3 py-2 mb-4">{created.temporaryPassword}</div>
+          <div className="text-xs text-slate mb-1">One-time temporary password (shown only now — pass it to the user securely; they must change it at first sign-in):</div>
+          <div className="font-mono bg-parchment rounded px-3 py-2 mb-4 select-all">{created.temporaryPassword}</div>
           <button className="btn-primary w-full" onClick={() => { onClose(); setCreated(null); }}>Done</button>
         </div>
       ) : (
@@ -106,6 +112,17 @@ function NewUserModal({ open, onClose, onCreated }: { open: boolean; onClose: ()
           <select className="input" value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value as Role })}>
             {ROLES.map((r) => <option key={r} value={r}>{ROLE_LABELS[r]}</option>)}
           </select>
+          {form.role === 'PROVINCIAL_HEAD' && (
+            <select className="input" required value={form.province} onChange={(e) => setForm({ ...form, province: e.target.value })} aria-label="Province">
+              <option value="">Province…</option>{PROVINCES.map((p) => <option key={p}>{p}</option>)}
+            </select>
+          )}
+          {['INSTITUTION_FOCAL_PERSON', 'INTEGRITY_COMMITTEE_CHAIR'].includes(form.role) && (
+            <select className="input" required value={form.institutionId} onChange={(e) => setForm({ ...form, institutionId: e.target.value })} aria-label="Institution">
+              <option value="">Institution…</option>{institutions.map((i) => <option key={i.id} value={i.id}>{i.name}</option>)}
+            </select>
+          )}
+          {error && <div role="alert" className="text-sm text-status-red">{error}</div>}
           <button type="submit" disabled={busy} className="btn-primary w-full">{busy ? 'Creating…' : 'Create User'}</button>
         </form>
       )}

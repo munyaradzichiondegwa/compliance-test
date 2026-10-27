@@ -39,6 +39,18 @@ import Pledges from './pages/institution/Pledges';
 import WhistleblowerCases from './pages/investigations/WhistleblowerCases';
 import WhistleblowerCaseDetail from './pages/investigations/WhistleblowerCaseDetail';
 
+import ChangePassword from './pages/auth/ChangePassword';
+import Engagements from './pages/engagements/Engagements';
+import EngagementDetail from './pages/engagements/EngagementDetail';
+import Ecmd from './pages/registers/Ecmd';
+import MonitoringPlan from './pages/registers/MonitoringPlan';
+import AuditFindings from './pages/registers/AuditFindings';
+import Funds from './pages/registers/Funds';
+import Programmes from './pages/registers/Programmes';
+import IcMonitoring from './pages/registers/IcMonitoring';
+import Certificates from './pages/registers/Certificates';
+import AiGovernance from './pages/registers/AiGovernance';
+import FieldCapture from './pages/registers/FieldCapture';
 import Users from './pages/admin/Users';
 import WorkflowConfig from './pages/admin/WorkflowConfig';
 import NotificationAdmin from './pages/admin/NotificationAdmin';
@@ -57,6 +69,7 @@ export default function App() {
             <Route path="/whistleblower/report" element={<WhistleblowerReport />} />
             <Route path="/whistleblower/track" element={<WhistleblowerTrack />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/change-password" element={<ProtectedRoute><ChangePassword /></ProtectedRoute>} />
 
             {/* Authenticated app shell */}
             <Route
@@ -84,6 +97,18 @@ export default function App() {
               <Route path="systems-reviews" element={<SystemsReviews />} />
               <Route path="systems-reviews/:id" element={<SystemsReviewDetail />} />
 
+              <Route path="engagements" element={<Engagements />} />
+              <Route path="engagements/:id" element={<EngagementDetail />} />
+              <Route path="ecmd" element={<Ecmd />} />
+              <Route path="monitoring-plan" element={<MonitoringPlan />} />
+              <Route path="audit-findings" element={<AuditFindings />} />
+              <Route path="funds" element={<Funds />} />
+              <Route path="programmes" element={<Programmes />} />
+              <Route path="ic-monitoring" element={<IcMonitoring />} />
+              <Route path="certificates" element={<Certificates />} />
+              <Route path="ai-governance" element={<AiGovernance />} />
+              <Route path="field-capture" element={<FieldCapture />} />
+
               <Route path="recommendations" element={<Recommendations />} />
               <Route path="recommendations/:id" element={<RecommendationDetail />} />
 
@@ -94,9 +119,9 @@ export default function App() {
               <Route path="users" element={<RoleGate roles={['SUPER_ADMIN']}><Users /></RoleGate>} />
               <Route path="workflow-config" element={<RoleGate roles={['SUPER_ADMIN']}><WorkflowConfig /></RoleGate>} />
               <Route path="notification-admin" element={<RoleGate roles={['SUPER_ADMIN']}><NotificationAdmin /></RoleGate>} />
-              <Route path="audit-log" element={<RoleGate roles={['SUPER_ADMIN', 'AUDITOR', 'PREVENTION_HEAD']}><AuditLog /></RoleGate>} />
-              <Route path="whistleblower-cases" element={<RoleGate roles={['SUPER_ADMIN', 'INVESTIGATIONS_OFFICER', 'PREVENTION_HEAD']}><WhistleblowerCases /></RoleGate>} />
-              <Route path="whistleblower-cases/:id" element={<RoleGate roles={['SUPER_ADMIN', 'INVESTIGATIONS_OFFICER', 'PREVENTION_HEAD']}><WhistleblowerCaseDetail /></RoleGate>} />
+              <Route path="audit-log" element={<RoleGate roles={['SUPER_ADMIN', 'AUDITOR', 'GM_PREVENTION']}><AuditLog /></RoleGate>} />
+              <Route path="whistleblower-cases" element={<RoleGate roles={['SUPER_ADMIN', 'INVESTIGATIONS_OFFICER', 'GM_PREVENTION']}><WhistleblowerCases /></RoleGate>} />
+              <Route path="whistleblower-cases/:id" element={<RoleGate roles={['SUPER_ADMIN', 'INVESTIGATIONS_OFFICER', 'GM_PREVENTION']}><WhistleblowerCaseDetail /></RoleGate>} />
             </Route>
 
             <Route path="*" element={<Navigate to="/" replace />} />

@@ -1,13 +1,18 @@
 export type Role =
   | 'SUPER_ADMIN'
-  | 'PREVENTION_HEAD'
+  | 'GM_PREVENTION'
   | 'COMPLIANCE_OFFICER'
   | 'SYSTEMS_REVIEWER'
   | 'MONITORING_OFFICER'
   | 'INSTITUTION_FOCAL_PERSON'
   | 'INTEGRITY_COMMITTEE_CHAIR'
   | 'AUDITOR'
-  | 'INVESTIGATIONS_OFFICER';
+  | 'INVESTIGATIONS_OFFICER'
+  | 'PROVINCIAL_HEAD'
+  | 'EXECUTIVE_SECRETARY'
+  | 'MANAGER_COMPLIANCE'
+  | 'PREVENTION_COMMITTEE'
+  | 'COMMISSION_CHAIR';
 
 export interface User {
   id: string;
@@ -17,6 +22,8 @@ export interface User {
   role: Role;
   institutionId: string | null;
   mfaEnabled: boolean;
+  mustChangePassword?: boolean;
+  province?: string | null;
 }
 
 export interface Institution {
@@ -39,7 +46,7 @@ export type RagStatus = 'Red' | 'Amber' | 'Green';
 
 export const ROLE_LABELS: Record<Role, string> = {
   SUPER_ADMIN: 'Super Administrator',
-  PREVENTION_HEAD: 'Prevention & Corporate Governance Head',
+  GM_PREVENTION: 'General Manager, Prevention and Corporate Governance',
   COMPLIANCE_OFFICER: 'Compliance Officer',
   SYSTEMS_REVIEWER: 'Systems Reviewer',
   MONITORING_OFFICER: 'Monitoring Officer',
@@ -47,6 +54,11 @@ export const ROLE_LABELS: Record<Role, string> = {
   INTEGRITY_COMMITTEE_CHAIR: 'Integrity Committee Chair',
   AUDITOR: 'Auditor',
   INVESTIGATIONS_OFFICER: 'Investigations Officer',
+  PROVINCIAL_HEAD: 'Provincial Head',
+  EXECUTIVE_SECRETARY: 'Executive Secretary',
+  MANAGER_COMPLIANCE: 'Manager, Compliance and Systems Review',
+  PREVENTION_COMMITTEE: 'Prevention and Corporate Governance Committee',
+  COMMISSION_CHAIR: 'Chairperson of the Commission',
 };
 
 export const PROVINCES = [

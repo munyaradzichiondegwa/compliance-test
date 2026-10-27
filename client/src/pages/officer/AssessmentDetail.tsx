@@ -42,7 +42,7 @@ export default function AssessmentDetail() {
 
   const isMine = data.officer_id === user?.id;
   const canEdit = (data.status === 'Draft' || data.status === 'Returned') && (isMine || user?.role === 'SUPER_ADMIN');
-  const canReview = ['Submitted', 'UnderReview'].includes(data.status) && ['PREVENTION_HEAD', 'SUPER_ADMIN'].includes(user?.role || '');
+  const canReview = ['Submitted', 'UnderReview'].includes(data.status) && ['GM_PREVENTION', 'SUPER_ADMIN'].includes(user?.role || '');
 
   const updateItem = (itemId: string, field: 'response' | 'comments', value: string) => {
     setData((d: any) => ({ ...d, items: d.items.map((it: any) => (it.id === itemId ? { ...it, [field]: value } : it)) }));

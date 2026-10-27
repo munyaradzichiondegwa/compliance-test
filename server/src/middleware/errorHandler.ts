@@ -23,7 +23,8 @@ export function errorHandler(err: any, req: Request, res: Response, _next: NextF
       (err?.stack ? `  stack:\n${err.stack}\n` : '')
   );
   if (res.headersSent) return;
-  res.status(status).json({ error: err?.message || 'Internal server error' });
+  // Never leak internals (SQL errors, stack hints) for server faults; client errors (4xx) carry their deliberate message.
+  res.status(status).json({ error: status >= 500 ? 'Internal server error' : (err?.message || 'Request failed') });
 }
 
 export function notFoundHandler(req: Request, res: Response) {

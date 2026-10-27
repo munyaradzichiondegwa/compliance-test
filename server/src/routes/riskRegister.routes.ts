@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { v4 as uuid } from 'uuid';
 import { db } from '../db';
-import { authenticate } from '../middleware/auth';
+import { authenticate, requireRole } from '../middleware/auth';
 import { asyncHandler } from '../middleware/errorHandler';
 import { writeAudit } from '../utils/audit';
 import { riskScore, riskCategory, residualScoreFromEffectiveness, buildHeatMap } from '../utils/riskEngine';
@@ -14,13 +14,17 @@ router.use(authenticate);
 router.get(
   '/',
   asyncHandler(async (req, res) => {
-    const { institutionId, category, treatmentStatus } = req.query as Record<string, string>;
+    const { institutionId, category, treatmentStatus, province } = req.query as Record<string, string>;
     let sql = `SELECT r.*, i.name as institution_name, u.name as owner_name FROM corruption_risks r
                LEFT JOIN institutions i ON i.id = r.institution_id LEFT JOIN users u ON u.id = r.owner_id WHERE 1=1`;
     const params: any[] = [];
     if (institutionId) {
       sql += ` AND r.institution_id = ?`;
       params.push(institutionId);
+    }
+    if (province) {
+      sql += ` AND i.province = ?`;
+      params.push(province);
     }
     if (category) {
       sql += ` AND r.category = ?`;
@@ -40,9 +44,13 @@ router.get(
 router.get(
   '/heatmap',
   asyncHandler(async (req, res) => {
-    const { institutionId } = req.query as Record<string, string>;
+    const { institutionId, province } = req.query as Record<string, string>;
     let sql = `SELECT likelihood, impact FROM corruption_risks WHERE 1=1`;
     const params: any[] = [];
+    if (province) {
+      sql += ` AND institution_id IN (SELECT id FROM institutions WHERE province = ?)`;
+      params.push(province);
+    }
     if (institutionId) {
       sql += ` AND institution_id = ?`;
       params.push(institutionId);
@@ -55,11 +63,12 @@ router.get(
 // GET /api/v1/risk-register/export.csv
 router.get(
   '/export.csv',
-  asyncHandler(async (_req, res) => {
+  asyncHandler(async (req, res) => {
+    const province = (req.query.province as string) || null;
     const rows = db.prepare(`
       SELECT r.name, r.category, i.name as institution, r.likelihood, r.impact, r.inherent_score, r.treatment_status, r.review_date
-      FROM corruption_risks r LEFT JOIN institutions i ON i.id = r.institution_id ORDER BY r.inherent_score DESC
-    `).all();
+      FROM corruption_risks r LEFT JOIN institutions i ON i.id = r.institution_id WHERE (? IS NULL OR i.province = ?) ORDER BY r.inherent_score DESC
+    `).all(province, province);
     res.setHeader('Content-Type', 'text/csv');
     res.setHeader('Content-Disposition', 'attachment; filename="Corruption_Risk_Register.csv"');
     res.send(toCsv(rows as any[]));
@@ -80,6 +89,7 @@ router.get(
 // POST /api/v1/risk-register
 router.post(
   '/',
+  requireRole('SUPER_ADMIN', 'GM_PREVENTION', 'MANAGER_COMPLIANCE', 'PROVINCIAL_HEAD', 'COMPLIANCE_OFFICER', 'SYSTEMS_REVIEWER', 'MONITORING_OFFICER', 'INTEGRITY_COMMITTEE_CHAIR', 'INSTITUTION_FOCAL_PERSON'),
   asyncHandler(async (req, res) => {
     const { institutionId, name, description, category, likelihood, impact, ownerId, reviewDate, linkedAssessmentId, linkedReviewId } = req.body || {};
     if (!name || !category || !likelihood || !impact) return res.status(400).json({ error: 'name, category, likelihood and impact are required' });
@@ -100,6 +110,7 @@ router.post(
 // PUT /api/v1/risk-register/:id
 router.put(
   '/:id',
+  requireRole('SUPER_ADMIN', 'GM_PREVENTION', 'MANAGER_COMPLIANCE', 'PROVINCIAL_HEAD', 'COMPLIANCE_OFFICER', 'SYSTEMS_REVIEWER', 'MONITORING_OFFICER', 'INTEGRITY_COMMITTEE_CHAIR', 'INSTITUTION_FOCAL_PERSON'),
   asyncHandler(async (req, res) => {
     const risk = db.prepare(`SELECT * FROM corruption_risks WHERE id = ?`).get(req.params.id) as any;
     if (!risk) return res.status(404).json({ error: 'Risk not found' });
@@ -118,6 +129,7 @@ router.put(
 // POST /api/v1/risk-register/:id/mitigations — RSK-03 residual risk
 router.post(
   '/:id/mitigations',
+  requireRole('SUPER_ADMIN', 'GM_PREVENTION', 'MANAGER_COMPLIANCE', 'PROVINCIAL_HEAD', 'COMPLIANCE_OFFICER', 'SYSTEMS_REVIEWER', 'MONITORING_OFFICER', 'INTEGRITY_COMMITTEE_CHAIR', 'INSTITUTION_FOCAL_PERSON'),
   asyncHandler(async (req, res) => {
     const { description, effectiveness, implementedDate, residualLikelihood, residualImpact } = req.body || {};
     if (!description || !effectiveness) return res.status(400).json({ error: 'description and effectiveness are required' });

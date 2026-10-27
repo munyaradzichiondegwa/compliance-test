@@ -34,6 +34,12 @@ Enterprise Digital Governance Platform
 
 ---
 
+> ## What is new in this version
+> The portal now runs **all eight Compliance, Systems and Processes Review SOPs** through one engagement workflow, generates the concept note, memoranda, notification letter, report, Implementation Matrix and compliance certificate on ZACC letterhead, and adds the Auditor-General findings library, Devolution/ZINARA acquittal tracker, quarterly monitoring plan, ECMD, offline field capture, Shona/Ndebele screens and AI governance controls. See [IMPROVEMENTS.md](IMPROVEMENTS.md) for the full list, [docs/MIGRATION.md](docs/MIGRATION.md) for the PostgreSQL / object-storage path, and `server/.env.example` for production settings.
+>
+> Quick start: `cd server && npm install && npm run seed && npm run dev`, then `cd client && npm install && npm run dev`. Tests: with the server running, `npm run test:e2e` (re-seed first). Demo password for seeded accounts: `ZaccDemo#2026`. The legacy "Compliance Checks" module is replaced by *Compliance Work* (`/app/engagements`).
+> New roles: Commission Chair, Prevention Committee, Executive Secretary, GM Prevention, Manager Compliance, Provincial Head.
+
 # Executive Summary
 
 The **ZACC Institutional Compliance Portal** is an enterprise digital governance platform developed to strengthen institutional integrity, improve compliance oversight, reduce corruption risks, and modernise governance processes across Zimbabwean public institutions.

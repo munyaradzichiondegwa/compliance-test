@@ -14,8 +14,10 @@ export default function Dashboard() {
   const [aud06, setAud06] = useState<any[]>([]);
   const [myWork, setMyWork] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [awaiting, setAwaiting] = useState<any[]>([]);
+  const [ecmd, setEcmd] = useState<any>(null);
 
-  const isAuditRole = user?.role === 'AUDITOR' || user?.role === 'SUPER_ADMIN' || user?.role === 'PREVENTION_HEAD';
+  const isAuditRole = user?.role === 'AUDITOR' || user?.role === 'SUPER_ADMIN' || user?.role === 'GM_PREVENTION';
 
   useEffect(() => {
     (async () => {
@@ -41,6 +43,13 @@ export default function Dashboard() {
     })();
   }, [user?.role, isAuditRole]);
 
+  const isClient = user?.role === 'INSTITUTION_FOCAL_PERSON' || user?.role === 'INTEGRITY_COMMITTEE_CHAIR';
+  useEffect(() => {
+    if (!user || isClient) return;
+    api.get('/engagements?awaitingMe=true').then((r) => setAwaiting(r || [])).catch(() => {});
+    api.get('/monitoring/ecmd').then(setEcmd).catch(() => {});
+  }, [user?.role]);
+
   if (loading || !overview) return <LoadingSpinner />;
 
   const ragData = ['Green', 'Amber', 'Red'].map((k) => ({
@@ -51,7 +60,28 @@ export default function Dashboard() {
 
   return (
     <div>
-      <PageHeader eyebrow={new Date().toLocaleDateString('en-GB', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} title={`Welcome back, ${user?.name.split(' ')[0]}`} />
+      <PageHeader eyebrow={new Date().toLocaleDateString('en-GB', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} title={`Welcome back, ${user?.name.split(' ')[0]}`} description={overview.scope === 'province' ? 'Showing your province only.' : overview.scope === 'institution' ? 'Showing your institution only.' : undefined} />
+
+      {awaiting.length > 0 && (
+        <section aria-label="Awaiting your decision" className="card p-5 mb-6 border-l-4 border-l-status-amber">
+          <h2 className="font-display font-semibold mb-2">Awaiting your action ({awaiting.length})</h2>
+          <ul className="divide-y divide-line">
+            {awaiting.slice(0, 8).map((e: any) => (
+              <li key={e.id}><Link to={`/app/engagements/${e.id}`} className="flex flex-wrap items-center justify-between gap-2 py-2 text-sm hover:bg-parchment/50 -mx-2 px-2 rounded">
+                <span><strong>{e.reference}</strong> · {e.institution_name}<span className="text-slate"> — {e.title}</span></span>
+                <span className={`text-xs ${e.step_due_at && new Date(e.step_due_at) < new Date() ? 'text-status-red font-medium' : 'text-slate'}`}>{e.current_step}{e.step_due_at ? ` · due ${String(e.step_due_at).slice(0, 10)}` : ''}</span></Link></li>))}
+          </ul>
+        </section>
+      )}
+
+      {ecmd && ecmd.summary.total > 0 && (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <KpiCard label="Rated institutions (ECMD)" value={ecmd.summary.total} />
+          <KpiCard label="Green" value={ecmd.summary.Green} tone="green" />
+          <KpiCard label="Amber" value={ecmd.summary.Amber} tone="amber" />
+          <KpiCard label="Red" value={ecmd.summary.Red} tone="red" />
+        </div>
+      )}
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <KpiCard label="Active Institutions" value={overview.activeInstitutions} />

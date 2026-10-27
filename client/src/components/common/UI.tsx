@@ -39,6 +39,9 @@ const STATUS_STYLES: Record<string, string> = {
   Avoided: 'badge-green',
   Complete: 'badge-green',
   Overdue: 'badge-red',
+  Preliminary: 'badge-slate', ConceptDraft: 'badge-slate', ConceptReview: 'badge-amber', Notified: 'badge-amber', Fieldwork: 'badge-amber', IMReview: 'badge-amber',
+  ReportDraft: 'badge-amber', ReportReview: 'badge-amber', Committee: 'badge-amber', Commission: 'badge-amber', Completed: 'badge-green', Monitoring: 'badge-amber',
+  Rejected: 'badge-red', Cancelled: 'badge-red', Proposed: 'badge-amber', Lifted: 'badge-green', Expired: 'badge-red', Revoked: 'badge-red',
 };
 
 export function StatusBadge({ status }: { status: string }) {
@@ -93,17 +96,41 @@ export function LoadError({ message = "We couldn't load this — it may not exis
 }
 
 export function Modal({ open, onClose, title, children, wide }: { open: boolean; onClose: () => void; title: string; children: React.ReactNode; wide?: boolean }) {
+  const ref = React.useRef<HTMLDivElement>(null);
+  const titleId = React.useId();
+  React.useEffect(() => {
+    if (!open) return;
+    const previous = document.activeElement as HTMLElement | null;
+    const node = ref.current;
+    const focusables = () => Array.from(node?.querySelectorAll<HTMLElement>('a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])') || []);
+    (focusables()[1] || focusables()[0])?.focus();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { e.stopPropagation(); onClose(); return; }
+      if (e.key !== 'Tab') return;
+      const f = focusables();
+      if (!f.length) return;
+      const first = f[0], last = f[f.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    };
+    document.addEventListener('keydown', onKey);
+    return () => { document.removeEventListener('keydown', onKey); previous?.focus?.(); };
+  }, [open, onClose]);
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-ink/40 backdrop-blur-sm" onClick={onClose}>
       <div
+        ref={ref}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
         className={`card w-full ${wide ? 'max-w-2xl' : 'max-w-md'} max-h-[90vh] overflow-y-auto shadow-raised`}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between px-5 py-4 border-b border-line sticky top-0 bg-paper">
-          <h3 className="font-display font-semibold text-ink">{title}</h3>
-          <button onClick={onClose} className="text-slate hover:text-ink text-xl leading-none px-1" aria-label="Close">
-            ×
+          <h3 id={titleId} className="font-display font-semibold text-ink">{title}</h3>
+          <button onClick={onClose} className="text-slate hover:text-ink text-xl leading-none px-2 py-1" aria-label="Close dialog">
+            <span aria-hidden>×</span>
           </button>
         </div>
         <div className="p-5">{children}</div>

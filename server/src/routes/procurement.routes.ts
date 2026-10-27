@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { v4 as uuid } from 'uuid';
 import { db } from '../db';
-import { authenticate } from '../middleware/auth';
+import { authenticate, requireRole } from '../middleware/auth';
 import { asyncHandler } from '../middleware/errorHandler';
 import { writeAudit } from '../utils/audit';
 import { evaluateRedFlags } from '../utils/procurementRules';
@@ -33,6 +33,7 @@ router.get(
 // POST /api/v1/procurement — manual entry, runs the same rule engine used by the eGP sync
 router.post(
   '/',
+  requireRole('AUDITOR', 'MONITORING_OFFICER', 'COMPLIANCE_OFFICER', 'MANAGER_COMPLIANCE', 'GM_PREVENTION', 'INVESTIGATIONS_OFFICER', 'SUPER_ADMIN'),
   asyncHandler(async (req, res) => {
     const { institutionId, description, value, method, supplierName, contractNumber, procurementDate } = req.body || {};
     if (!institutionId || !description || !value || !method || !supplierName || !procurementDate) {
@@ -57,6 +58,7 @@ router.post(
 // POST /api/v1/procurement/egp-sync — simulated PRAZ eGP batch sync (Section 10.1, mock adapter)
 router.post(
   '/egp-sync',
+  requireRole('AUDITOR', 'MONITORING_OFFICER', 'COMPLIANCE_OFFICER', 'MANAGER_COMPLIANCE', 'GM_PREVENTION', 'INVESTIGATIONS_OFFICER', 'SUPER_ADMIN'),
   asyncHandler(async (req, res) => {
     const institutions = db.prepare(`SELECT id FROM institutions ORDER BY RANDOM() LIMIT 4`).all() as { id: string }[];
     const suppliers = ['Ruvimbo Trading (Pvt) Ltd', 'TechBridge Solutions Zimbabwe', 'Nyati Construction Co.', 'Apex Fleet Services'];

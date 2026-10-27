@@ -18,10 +18,13 @@ export function authenticate(req: Request, res: Response, next: NextFunction) {
   const token = header.slice(7);
   try {
     req.user = verifyAccessToken(token);
-    next();
   } catch {
     return res.status(401).json({ error: 'Invalid or expired access token' });
   }
+  if (req.user.mcp && !/\/auth\/(change-password|me|logout)$/.test(req.originalUrl.split('?')[0])) {
+    return res.status(403).json({ error: 'You must change your temporary password before continuing', code: 'PASSWORD_CHANGE_REQUIRED' });
+  }
+  next();
 }
 
 export function requireRole(...roles: string[]) {

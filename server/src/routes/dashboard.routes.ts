@@ -1,3 +1,5 @@
+import { logAi, AI_EXPLANATIONS } from '../utils/aiGov';
+import { isInstitutionRole, staffOnly } from '../middleware/scope';
 import { Router } from 'express';
 import { db } from '../db';
 import { authenticate } from '../middleware/auth';
@@ -7,22 +9,32 @@ import { predictTrend } from '../utils/ai';
 const router = Router();
 router.use(authenticate);
 
-// GET /api/v1/dashboard/overview — top-line KPIs for any authenticated landing page
+// GET /api/v1/dashboard/overview — top-line KPIs for any signed-in user. Institution users see their own
+// institution only; Provincial Heads see their province; everyone else sees the national picture.
 router.get(
   '/overview',
-  asyncHandler(async (_req, res) => {
-    const institutions = db.prepare(`SELECT COUNT(*) c FROM institutions WHERE status='Active'`).get() as { c: number };
-    const assessmentsThisYear = db.prepare(`SELECT COUNT(*) c FROM assessments WHERE status='Closed' AND created_at >= date('now','start of year')`).get() as { c: number };
-    const openRecs = db.prepare(`SELECT COUNT(*) c FROM recommendations WHERE status NOT IN ('Closed','Verified')`).get() as { c: number };
-    const overdueRecs = db.prepare(`SELECT COUNT(*) c FROM recommendations WHERE status NOT IN ('Closed','Verified') AND due_date < date('now')`).get() as { c: number };
-    const openWb = db.prepare(`SELECT COUNT(*) c FROM whistleblower_reports WHERE status NOT IN ('Closed','Insufficient')`).get() as { c: number };
-    const avgScore = db.prepare(`SELECT AVG(composite_score) a FROM assessments WHERE status = 'Closed' AND composite_score IS NOT NULL`).get() as { a: number | null };
+  asyncHandler(async (req, res) => {
+    const u = req.user!;
+    let instId: string | null = null;
+    let prov: string | null = null;
+    if (isInstitutionRole(u.role)) { if (!u.institutionId) return res.status(403).json({ error: 'No institution is linked to your account' }); instId = u.institutionId; }
+    else if (u.role === 'PROVINCIAL_HEAD') prov = (db.prepare(`SELECT province FROM users WHERE id = ?`).get(u.sub) as any)?.province || null;
+    const scopeI = `(? IS NULL OR i.id = ?) AND (? IS NULL OR i.province = ?)`;
+    const sp = [instId, instId, prov, prov];
+    const institutions = db.prepare(`SELECT COUNT(*) c FROM institutions i WHERE i.status='Active' AND ${scopeI}`).get(...sp) as { c: number };
+    const assessmentsThisYear = db.prepare(`SELECT COUNT(*) c FROM assessments a JOIN institutions i ON i.id = a.institution_id WHERE a.status='Closed' AND a.created_at >= date('now','start of year') AND ${scopeI}`).get(...sp) as { c: number };
+    const openRecs = db.prepare(`SELECT COUNT(*) c FROM recommendations r JOIN institutions i ON i.id = r.institution_id WHERE r.status NOT IN ('Closed','Verified') AND ${scopeI}`).get(...sp) as { c: number };
+    const overdueRecs = db.prepare(`SELECT COUNT(*) c FROM recommendations r JOIN institutions i ON i.id = r.institution_id WHERE r.status NOT IN ('Closed','Verified') AND r.due_date < date('now') AND ${scopeI}`).get(...sp) as { c: number };
+    const openWb = instId ? { c: 0 } : db.prepare(`SELECT COUNT(*) c FROM whistleblower_reports WHERE status NOT IN ('Closed','Insufficient')`).get() as { c: number };
+    const avgScore = db.prepare(`SELECT AVG(a.composite_score) a FROM assessments a JOIN institutions i ON i.id = a.institution_id WHERE a.status = 'Closed' AND a.composite_score IS NOT NULL AND ${scopeI}`).get(...sp) as { a: number | null };
     const ragCounts = db.prepare(`
-      SELECT rag_status, COUNT(*) c FROM assessments a
+      SELECT a.rag_status, COUNT(*) c FROM assessments a JOIN institutions i ON i.id = a.institution_id
       INNER JOIN (SELECT institution_id, MAX(COALESCE(closed_at, created_at)) as maxDate FROM assessments WHERE status='Closed' GROUP BY institution_id) latest
       ON latest.institution_id = a.institution_id AND COALESCE(a.closed_at, a.created_at) = latest.maxDate
-      GROUP BY rag_status
-    `).all();
+      WHERE ${scopeI} GROUP BY a.rag_status
+    `).all(...sp);
+    // engagement pipeline (counts only)
+    const awaiting = isInstitutionRole(u.role) ? 0 : (db.prepare(`SELECT COUNT(*) c FROM engagements e JOIN institutions i ON i.id = e.institution_id WHERE e.current_step IS NOT NULL AND ${scopeI}`).get(...sp) as { c: number }).c;
 
     res.json({
       activeInstitutions: institutions.c,
@@ -32,9 +44,14 @@ router.get(
       openWhistleblowerCases: openWb.c,
       avgComplianceScore: avgScore.a ? Math.round(avgScore.a * 10) / 10 : null,
       ragDistribution: ragCounts,
+      engagementsAwaitingDecision: awaiting,
+      scope: instId ? 'institution' : prov ? 'province' : 'national',
     });
   })
 );
+
+// Everything below is analytics for ZACC staff only.
+router.use(staffOnly);
 
 // GET /api/v1/dashboard/aud-01-overdue-recommendations — aged 30/60/90 buckets
 router.get(
@@ -139,7 +156,9 @@ router.get(
   asyncHandler(async (req, res) => {
     const rows = db.prepare(`SELECT created_at as date, composite_score as score FROM assessments WHERE institution_id = ? AND composite_score IS NOT NULL ORDER BY created_at ASC`).all(req.params.institutionId) as any[];
     const prediction = predictTrend(rows);
-    res.json({ history: rows, prediction });
+    let aiDecisionId: string | null = null;
+    if (prediction) aiDecisionId = logAi({ feature: 'trend_prediction', entityType: 'institution', entityId: req.params.institutionId, institutionId: req.params.institutionId, input: `${rows.length} assessments`, output: JSON.stringify(prediction), factors: { dataPoints: rows.length, slopePerCycle: prediction.slope }, confidence: prediction.confidence, userId: req.user!.sub }).id;
+    res.json({ history: rows, prediction, aiDecisionId, explanation: AI_EXPLANATIONS.trend_prediction, requiresHumanReview: true });
   })
 );
 

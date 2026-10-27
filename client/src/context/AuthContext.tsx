@@ -10,6 +10,7 @@ interface AuthContextValue {
   verifyMfaChallenge: (tempToken: string, token: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshMe: () => Promise<void>;
+  changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
 }
 
 type LoginStepResult =
@@ -73,6 +74,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [completeSession]
   );
 
+  const changePassword = useCallback(async (currentPassword: string, newPassword: string) => {
+    const res = await api.post('/auth/change-password', { currentPassword, newPassword });
+    setTokens(res.accessToken, res.refreshToken);
+    setUser(res.user);
+  }, []);
+
   const logout = useCallback(async () => {
     const refreshToken = localStorage.getItem('zacc_refresh_token');
     try {
@@ -82,10 +89,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     setTokens(null, null);
     setUser(null);
+    // never leave cached API responses behind on a shared device
+    try { localStorage.removeItem('zacc_field_engagements'); } catch { /* ignore */ }
+    try { if ('caches' in window) (await caches.keys()).filter((k) => !k.includes('precache')).forEach((k) => caches.delete(k)); } catch { /* ignore */ }
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, verifyMfaSetup, verifyMfaChallenge, logout, refreshMe }}>
+    <AuthContext.Provider value={{ user, loading, login, verifyMfaSetup, verifyMfaChallenge, logout, refreshMe, changePassword }}>
       {children}
     </AuthContext.Provider>
   );

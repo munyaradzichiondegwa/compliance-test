@@ -1,86 +1,73 @@
 import {
   LayoutDashboard, Building2, ClipboardCheck, FileSearch, ListChecks, Users, ShieldCheck,
   FileSignature, Siren, Map, ShieldAlert, ScrollText, FileBarChart, Settings, Workflow,
-  MailCheck, Search, Landmark,
+  MailCheck, Search, Landmark, ClipboardList, Gauge, CalendarClock, BookOpenCheck, Coins,
+  HardHat, Award, Bot, Smartphone,
 } from 'lucide-react';
 import type { Role } from '../../types';
 
 export interface NavItem {
   to: string;
+  /** i18n key (see src/i18n) */
   label: string;
   icon: any;
 }
 
-const DASHBOARD: NavItem = { to: '/app/dashboard', label: 'Dashboard', icon: LayoutDashboard };
-const INSTITUTIONS: NavItem = { to: '/app/institutions', label: 'Institutions', icon: Building2 };
-const GIS: NavItem = { to: '/app/gis', label: 'GIS Map', icon: Map };
-const RISK: NavItem = { to: '/app/risk-register', label: 'Risk Register', icon: ShieldAlert };
-const SEARCH: NavItem = { to: '/app/search', label: 'Search', icon: Search };
-const REPORTS: NavItem = { to: '/app/reports', label: 'Reports', icon: FileBarChart };
-const SETTINGS: NavItem = { to: '/app/settings', label: 'Settings', icon: Settings };
+const N = (to: string, label: string, icon: any): NavItem => ({ to: `/app/${to}`, label, icon });
+
+const DASHBOARD = N('dashboard', 'nav.dashboard', LayoutDashboard);
+const WORK = N('engagements', 'nav.engagements', ClipboardList);
+const INSTITUTIONS = N('institutions', 'nav.institutions', Building2);
+const ASSESSMENTS = N('assessments', 'nav.assessments', ClipboardCheck);
+const REVIEWS = N('systems-reviews', 'nav.systemsReviews', FileSearch);
+const RECS = N('recommendations', 'nav.recommendations', ListChecks);
+const RISK = N('risk-register', 'nav.risk', ShieldAlert);
+const GIS = N('gis', 'nav.gis', Map);
+const REPORTS = N('reports', 'nav.reports', FileBarChart);
+const SEARCH = N('search', 'nav.search', Search);
+const SETTINGS = N('settings', 'nav.settings', Settings);
+const PROCUREMENT = N('procurement', 'nav.procurement', Landmark);
+const ECMD = N('ecmd', 'nav.ecmd', Gauge);
+const PLAN = N('monitoring-plan', 'nav.plan', CalendarClock);
+const AUDIT_FINDINGS = N('audit-findings', 'nav.auditFindings', BookOpenCheck);
+const FUNDS = N('funds', 'nav.funds', Coins);
+const PROGRAMMES = N('programmes', 'nav.programmes', HardHat);
+const IC = N('ic-monitoring', 'nav.ic', ShieldCheck);
+const CERTS = N('certificates', 'nav.certificates', Award);
+const AI_GOV = N('ai-governance', 'nav.aiGov', Bot);
+const FIELD = N('field-capture', 'nav.fieldCapture', Smartphone);
+const AUDIT_LOG = N('audit-log', 'nav.auditLog', ScrollText);
+const PLEDGES = N('pledges', 'nav.pledges', FileSignature);
+const COMMITTEES = N('committees', 'nav.committees', ShieldCheck);
 
 export function getNavForRole(role: Role): NavItem[] {
   switch (role) {
     case 'SUPER_ADMIN':
-      return [
-        DASHBOARD, INSTITUTIONS,
-        { to: '/app/users', label: 'Users', icon: Users },
-        { to: '/app/workflow-config', label: 'Workflow Config', icon: Workflow },
-        { to: '/app/notification-admin', label: 'Notifications Admin', icon: MailCheck },
-        { to: '/app/audit-log', label: 'Audit Log', icon: ScrollText },
-        RISK, { to: '/app/procurement', label: 'Procurement', icon: Landmark }, GIS, REPORTS, SEARCH, SETTINGS,
-      ];
-    case 'PREVENTION_HEAD':
-      return [
-        DASHBOARD, INSTITUTIONS,
-        { to: '/app/assessments', label: 'Assessments', icon: ClipboardCheck },
-        { to: '/app/systems-reviews', label: 'Systems Reviews', icon: FileSearch },
-        { to: '/app/recommendations', label: 'Recommendations', icon: ListChecks },
-        RISK, GIS, REPORTS, SEARCH, SETTINGS,
-      ];
+      return [DASHBOARD, WORK, INSTITUTIONS, ASSESSMENTS, REVIEWS, RECS, ECMD, PLAN, AUDIT_FINDINGS, FUNDS, PROGRAMMES, IC, CERTS, COMMITTEES, PLEDGES, RISK, PROCUREMENT, GIS, REPORTS, AI_GOV, FIELD,
+        N('users', 'nav.users', Users), N('workflow-config', 'nav.workflow', Workflow), N('notification-admin', 'nav.notifAdmin', MailCheck), AUDIT_LOG, N('whistleblower-cases', 'nav.whistleblower', Siren), SEARCH, SETTINGS];
+    case 'COMMISSION_CHAIR':
+    case 'PREVENTION_COMMITTEE':
+    case 'EXECUTIVE_SECRETARY':
+      return [DASHBOARD, WORK, ECMD, PLAN, INSTITUTIONS, RECS, CERTS, REPORTS, SEARCH, SETTINGS];
+    case 'GM_PREVENTION':
+    case 'MANAGER_COMPLIANCE':
+      return [DASHBOARD, WORK, ASSESSMENTS, REVIEWS, INSTITUTIONS, RECS, ECMD, PLAN, AUDIT_FINDINGS, FUNDS, PROGRAMMES, IC, CERTS, RISK, GIS, REPORTS, AI_GOV, ...(role === 'GM_PREVENTION' ? [AUDIT_LOG] : []), SEARCH, SETTINGS];
+    case 'PROVINCIAL_HEAD':
+      return [DASHBOARD, WORK, ASSESSMENTS, INSTITUTIONS, RECS, ECMD, PLAN, FUNDS, PROGRAMMES, IC, FIELD, RISK, REPORTS, SEARCH, SETTINGS];
     case 'COMPLIANCE_OFFICER':
-      return [
-        DASHBOARD,
-        { to: '/app/assessments', label: 'My Assessments', icon: ClipboardCheck },
-        INSTITUTIONS, RISK, GIS, SEARCH, SETTINGS,
-      ];
+      return [DASHBOARD, WORK, ASSESSMENTS, INSTITUTIONS, ECMD, AUDIT_FINDINGS, FUNDS, PROGRAMMES, FIELD, RISK, GIS, SEARCH, SETTINGS];
     case 'SYSTEMS_REVIEWER':
-      return [
-        DASHBOARD,
-        { to: '/app/systems-reviews', label: 'My Reviews', icon: FileSearch },
-        INSTITUTIONS, RISK, SEARCH, SETTINGS,
-      ];
+      return [DASHBOARD, WORK, REVIEWS, INSTITUTIONS, AUDIT_FINDINGS, RISK, FIELD, SEARCH, SETTINGS];
     case 'MONITORING_OFFICER':
-      return [
-        DASHBOARD,
-        { to: '/app/recommendations', label: 'Recommendation Tracker', icon: ListChecks },
-        INSTITUTIONS, SEARCH, SETTINGS,
-      ];
-    case 'INSTITUTION_FOCAL_PERSON':
-      return [
-        DASHBOARD,
-        { to: '/app/recommendations', label: 'My Recommendations', icon: ListChecks },
-        { to: '/app/pledges', label: 'Integrity Pledges', icon: FileSignature },
-        SETTINGS,
-      ];
-    case 'INTEGRITY_COMMITTEE_CHAIR':
-      return [
-        DASHBOARD,
-        { to: '/app/committees', label: 'My Committee', icon: ShieldCheck },
-        { to: '/app/pledges', label: 'Integrity Pledges', icon: FileSignature },
-        SETTINGS,
-      ];
+      return [DASHBOARD, WORK, RECS, ECMD, PLAN, IC, PROGRAMMES, FUNDS, AUDIT_FINDINGS, INSTITUTIONS, FIELD, SEARCH, SETTINGS];
     case 'AUDITOR':
-      return [
-        { to: '/app/dashboard', label: 'Audit Dashboard', icon: LayoutDashboard },
-        { to: '/app/audit-log', label: 'Audit Log', icon: ScrollText },
-        INSTITUTIONS, RISK, { to: '/app/procurement', label: 'Procurement', icon: Landmark }, GIS, REPORTS, SEARCH, SETTINGS,
-      ];
+      return [N('dashboard', 'nav.dashboard', LayoutDashboard), AUDIT_LOG, INSTITUTIONS, AUDIT_FINDINGS, FUNDS, ECMD, RISK, PROCUREMENT, GIS, REPORTS, AI_GOV, SEARCH, SETTINGS];
     case 'INVESTIGATIONS_OFFICER':
-      return [
-        { to: '/app/whistleblower-cases', label: 'Whistleblower Cases', icon: Siren },
-        DASHBOARD, SETTINGS,
-      ];
+      return [N('whistleblower-cases', 'nav.whistleblower', Siren), DASHBOARD, SETTINGS];
+    case 'INSTITUTION_FOCAL_PERSON':
+      return [DASHBOARD, WORK, RECS, CERTS, PLEDGES, SETTINGS];
+    case 'INTEGRITY_COMMITTEE_CHAIR':
+      return [DASHBOARD, COMMITTEES, IC, WORK, PLEDGES, SETTINGS];
     default:
       return [DASHBOARD, SETTINGS];
   }

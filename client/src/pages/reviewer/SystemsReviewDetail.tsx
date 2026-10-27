@@ -34,7 +34,7 @@ export default function SystemsReviewDetail() {
   if (loading) return <LoadingSpinner />;
   if (loadError || !data) return <LoadError message="This systems review couldn't be found." />;
 
-  const canApprove = ['PREVENTION_HEAD', 'SUPER_ADMIN'].includes(user?.role || '');
+  const canApprove = ['GM_PREVENTION', 'SUPER_ADMIN'].includes(user?.role || '');
   const isReviewer = data.reviewers.some((r: any) => r.id === user?.id) || user?.role === 'SUPER_ADMIN';
   const currentIdx = STATUS_FLOW.indexOf(data.status);
 
@@ -42,7 +42,7 @@ export default function SystemsReviewDetail() {
     const nextStatus = STATUS_FLOW[currentIdx + 1];
     if (!nextStatus) return;
     if (nextStatus === 'Approved' && !canApprove) {
-      alert('Only the Prevention Head can approve a systems review.');
+      alert('Only the General Manager, Prevention and Corporate Governance can approve a systems review.');
       return;
     }
     setChangingStatus(true);
