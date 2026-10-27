@@ -2,2133 +2,546 @@
 
 <div align="center">
 
-# Zimbabwe Anti-Corruption Commission
+### Zimbabwe Anti-Corruption Commission
+### Compliance, Systems and Processes Review
 
-## Institutional Compliance Portal
-
-### Enterprise Governance • Integrity • Risk Management • Compliance Monitoring
-
-A comprehensive enterprise-grade Institutional Compliance Management Platform designed to support corruption prevention, institutional integrity, governance oversight, compliance monitoring, and strategic decision-making across Zimbabwean public institutions.
+A working portal for the Commission's compliance, systems-and-processes review and monitoring function: from the first
+complaint or programme item, through concept note, approvals, fieldwork, Implementation Matrix and report, to monitoring,
+re-rating and certification.
 
 ![Node.js](https://img.shields.io/badge/Node.js-20_LTS-339933?logo=node.js&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
-![Express](https://img.shields.io/badge/Express-Enterprise-black?logo=express)
+![Express](https://img.shields.io/badge/Express-4-black?logo=express)
 ![React](https://img.shields.io/badge/React-18-61DAFB?logo=react)
 ![Vite](https://img.shields.io/badge/Vite-5-646CFF?logo=vite)
 ![SQLite](https://img.shields.io/badge/SQLite-3-003B57?logo=sqlite)
-![Socket.IO](https://img.shields.io/badge/Socket.IO-Realtime-010101?logo=socketdotio)
+![Socket.IO](https://img.shields.io/badge/Socket.IO-4-010101?logo=socketdotio)
 ![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3-38BDF8?logo=tailwindcss)
-![License](https://img.shields.io/badge/License-Institutional-blue)
 
----
-
-**Version:** 1.0
-
-**Prepared For:** Zimbabwe Anti-Corruption Commission (ZACC)
-
-**Developed By:** Bloodshed Munyaradzi Chiondegwa
-
-Enterprise Digital Governance Platform
+**Prepared for:** Zimbabwe Anti-Corruption Commission (ZACC) · **Developed by:** Bloodshed Munyaradzi Chiondegwa
 
 </div>
 
 ---
 
-> ## What is new in this version
-> The portal now runs **all eight Compliance, Systems and Processes Review SOPs** through one engagement workflow, generates the concept note, memoranda, notification letter, report, Implementation Matrix and compliance certificate on ZACC letterhead, and adds the Auditor-General findings library, Devolution/ZINARA acquittal tracker, quarterly monitoring plan, ECMD, offline field capture, Shona/Ndebele screens and AI governance controls. See [IMPROVEMENTS.md](IMPROVEMENTS.md) for the full list, [docs/MIGRATION.md](docs/MIGRATION.md) for the PostgreSQL / object-storage path, and `server/.env.example` for production settings.
->
-> Quick start: `cd server && npm install && npm run seed && npm run dev`, then `cd client && npm install && npm run dev`. Tests: with the server running, `npm run test:e2e` (re-seed first). Demo password for seeded accounts: `ZaccDemo#2026`. The legacy "Compliance Checks" module is replaced by *Compliance Work* (`/app/engagements`).
-> New roles: Commission Chair, Prevention Committee, Executive Secretary, GM Prevention, Manager Compliance, Provincial Head.
+## Contents
 
-# Executive Summary
-
-The **ZACC Institutional Compliance Portal** is an enterprise digital governance platform developed to strengthen institutional integrity, improve compliance oversight, reduce corruption risks, and modernise governance processes across Zimbabwean public institutions.
-
-The platform digitises compliance monitoring, corruption risk management, institutional assessments, systems reviews, procurement oversight, whistleblower reporting, workflow automation, executive reporting, GIS visualisation, and AI-assisted compliance analytics within a secure government-grade environment.
-
-Unlike demonstration software, this solution provides a complete enterprise implementation with working APIs, persistent storage, authentication, workflow automation, audit logging, real-time communication, and role-based security.
-
-The system supports Zimbabwe's national anti-corruption strategy by enabling institutions to proactively identify weaknesses, monitor implementation of recommendations, improve transparency, and strengthen accountability through data-driven governance.
-
----
-
-# Vision
-
-To provide Zimbabwe's premier digital governance platform for promoting integrity, transparency, accountability, and institutional excellence through secure, intelligent, and automated compliance management.
-
----
-
-# Mission
-
-To empower the Zimbabwe Anti-Corruption Commission and partner institutions with an integrated compliance ecosystem that improves governance, strengthens corruption prevention, supports evidence-based decision-making, and enhances institutional accountability.
+1. [What the portal does](#1-what-the-portal-does)
+2. [Quick start](#2-quick-start)
+3. [The engagement workflow](#3-the-engagement-workflow)
+4. [The eight SOPs](#4-the-eight-sops)
+5. [Generated documents](#5-generated-documents)
+6. [Monitoring, registers and certification](#6-monitoring-registers-and-certification)
+7. [Roles and access](#7-roles-and-access)
+8. [Other modules](#8-other-modules)
+9. [AI features and AI governance](#9-ai-features-and-ai-governance)
+10. [Offline field capture, languages and accessibility](#10-offline-field-capture-languages-and-accessibility)
+11. [Security](#11-security)
+12. [Architecture and project structure](#12-architecture-and-project-structure)
+13. [Configuration](#13-configuration)
+14. [API overview](#14-api-overview)
+15. [Testing](#15-testing)
+16. [Deployment and the production path](#16-deployment-and-the-production-path)
+17. [Known limitations](#17-known-limitations)
+18. [Troubleshooting](#18-troubleshooting)
+19. [License and support](#19-license-and-support)
 
 ---
 
-# Core Objectives
+## 1. What the portal does
 
-The platform has been designed to achieve the following strategic objectives:
-
-- Strengthen institutional integrity
-- Improve governance oversight
-- Digitise compliance assessments
-- Enhance corruption prevention
-- Improve institutional accountability
-- Monitor implementation of recommendations
-- Support proactive risk management
-- Improve transparency
-- Centralise institutional reporting
-- Provide executive decision support
-- Protect whistleblowers
-- Automate regulatory workflows
+| Area | What you get |
+|------|--------------|
+| **Compliance Work** | One workflow for all eight SOPs: preliminary assessment, concept note, approvals, notification letter, fieldwork, Implementation Matrix, report, monitoring. |
+| **Documents on letterhead** | Concept note, memorandum, notification letter, report, landscape Implementation Matrix and monitoring notice as Word files; compliance certificate as PDF. |
+| **Monitoring** | Three-month monitoring plan, Red → Amber → Green re-checks, the Electronic Compliance Monitoring Dashboard (ECMD), certificates valid for 12 months, regulator measures for non-compliant institutions. |
+| **Registers** | Auditor-General / internal-audit / media findings library with repeat-finding detection; Devolution Funds and ZINARA acquittal tracker; government projects and programmes with verified progress; Integrity Committee deliverables and quarterly reports. |
+| **Existing modules** | Institutional registry, scored compliance assessments, systems reviews with document versioning, recommendation tracker, corruption risk register, procurement red-flag monitoring, Integrity Committees and pledges, GIS map, encrypted whistleblower channel, reports, audit log. |
+| **Controls** | Mandatory MFA, 14 roles, server-enforced institution and province scoping, SLA reminders and escalation, AI decision log with human review. |
+| **Field use** | Offline-first capture of findings, interview minutes and meetings; English, Shona and Ndebele; accessibility work to WCAG 2.1 AA. |
 
 ---
 
-# Key Capabilities
+## 2. Quick start
 
-The platform delivers a complete digital governance ecosystem supporting:
+**Requirements:** Node.js 20+, npm, Git. No database server is needed; SQLite is bundled.
 
-- Institutional Registry
-- Compliance Assessments
-- Corruption Risk Registers
-- Systems Reviews
-- Recommendation Tracking
-- Integrity Committees
-- Integrity Pledges
-- Procurement Monitoring
-- Governance Dashboards
-- Workflow Automation
-- GIS Mapping
-- Artificial Intelligence
-- Secure Whistleblower Reporting
-- Executive Reporting
-- Audit Logging
+```bash
+# from the repository root
+npm run install:all     # installs server and client dependencies
+npm run seed            # creates the schema and demonstration data
+npm run dev             # starts server (4000) and client (5173)
+```
 
----
+Open <http://localhost:5173>.
 
-# Enterprise Features
+| Command (repository root) | Purpose |
+|---------------------------|---------|
+| `npm run install:all` | Install `server/` and `client/` dependencies |
+| `npm run seed` | **Drops and rebuilds** the demo database (never run against real data) |
+| `npm run dev` | Development servers with reload |
+| `npm run build` | Compile the server and build the client |
+| `npm start` | Run the built server; it also serves `client/dist` on one port |
+| `npm run setup` | install + seed + build |
+| `npm run demo` | setup, then start |
 
-## Governance Management
+| Service | Development URL |
+|---------|-----------------|
+| Client | <http://localhost:5173> (proxies `/api` and `/socket.io` to the server) |
+| API | <http://localhost:4000/api/v1> |
+| Health | <http://localhost:4000/health> |
+| Built app (after `npm run build && npm start`) | <http://localhost:4000> |
 
-- Institutional Registry
-- Governance Assessments
-- Organisational Profiling
-- Governance Maturity Scoring
-- Institutional Performance Monitoring
-- Strategic Compliance Planning
+### Demo accounts
 
----
+All seeded accounts use the password **`ZaccDemo#2026`**. Every account must enrol an authenticator app (TOTP) on first sign-in.
+The seeded accounts for approvers carry their position as the name.
 
-## Compliance Management
+| Position | Email |
+|----------|-------|
+| Super Administrator | `admin@zacc.gov.zw` |
+| Commission Chairperson | `commission.chair@zacc.gov.zw` |
+| Prevention and Corporate Governance Committee | `prevention.committee@zacc.gov.zw` |
+| Executive Secretary | `exec.secretary@zacc.gov.zw` |
+| General Manager, Prevention | `gm.prevention@zacc.gov.zw` |
+| Manager, Compliance and Systems Review | `manager.compliance@zacc.gov.zw` |
+| Provincial Head (Masvingo) | `provincial.head@zacc.gov.zw` |
+| Compliance Officers | `officer1@`, `officer2@`, `officer3@zacc.gov.zw` |
+| Systems Reviewers | `reviewer1@`, `reviewer2@zacc.gov.zw` |
+| Monitoring Officers | `monitoring1@`, `monitoring2@zacc.gov.zw` |
+| Auditor | `auditor@zacc.gov.zw` |
+| Investigations Officer | `investigations@zacc.gov.zw` |
+| Institution Focal Person | `focal.1@institution-demo.zw` |
+| Integrity Committee Chair | `committee.chair.1@institution-demo.zw` |
 
-- Compliance Assessments
-- Compliance Frameworks
-- Automated Compliance Scoring
-- Compliance Heat Maps
-- Assessment Scheduling
-- Assessment History
-- Compliance Dashboards
-
----
-
-## Corruption Prevention
-
-- Corruption Risk Registers
-- Risk Identification
-- Risk Classification
-- Risk Heat Maps
-- Residual Risk Analysis
-- Mitigation Planning
-- Risk Monitoring
+Accounts created by an administrator receive a generated temporary password and must change it at first sign-in
+(10 or more characters with upper case, lower case and a digit). **Delete or reset the demo accounts before real use.**
 
 ---
 
-## Systems Reviews
+## 3. The engagement workflow
 
-- Review Planning
-- Collaborative Reviews
-- Findings Management
-- Recommendation Generation
-- Version Control
-- Approval Workflow
-
----
-
-## Recommendation Management
-
-- Recommendation Lifecycle
-- Progress Tracking
-- Evidence Upload
-- Verification Workflow
-- Automated Reminders
-- Escalation Rules
-
----
-
-## Integrity Management
-
-- Integrity Committees
-- Committee Membership
-- Committee Meetings
-- Action Plans
-- Integrity Pledges
-- Ethics Training
-- Compliance Awareness
-
----
-
-## Procurement Monitoring
-
-The procurement monitoring engine supports detection of:
-
-- Single Sourcing
-- Supplier Concentration
-- Duplicate Procurement
-- Split Purchases
-- Procurement Threshold Violations
-- Contract Irregularities
-
----
-
-## Executive Analytics
-
-- Executive Dashboards
-- Compliance Trends
-- Province Summaries
-- Institution Rankings
-- Recommendation Ageing
-- Risk Distribution
-- Performance Indicators
-- Interactive Reports
-
----
-
-## Artificial Intelligence
-
-Integrated AI utilities include:
-
-- Automated Summarisation
-- Duplicate Finding Detection
-- Compliance Intelligence
-- Recommendation Drafting
-- Trend Analysis
-- Natural Language Search
-- Predictive Analytics
-
----
-
-## Whistleblower Protection
-
-Enterprise whistleblower protection provides:
-
-- Anonymous Reporting
-- End-to-End Encryption
-- Secure Tracking Codes
-- Investigation Workflow
-- Secure Evidence Management
-- Access Auditing
-
----
-
-# Technology Stack
-
-## Backend
-
-| Layer | Technology |
-|---------|------------|
-| Runtime | Node.js 20 LTS |
-| Language | TypeScript |
-| Framework | Express |
-| Database | SQLite |
-| ORM | better-sqlite3 |
-| Authentication | JWT |
-| MFA | TOTP |
-| Real-time | Socket.IO |
-
----
-
-## Frontend
-
-| Layer | Technology |
-|---------|------------|
-| Framework | React 18 |
-| Language | TypeScript |
-| Build Tool | Vite |
-| Styling | TailwindCSS |
-| Routing | React Router |
-| Data Fetching | React Query |
-| WebSockets | Socket.IO Client |
-
----
-
-## Security
-
-Government-grade security mechanisms include:
-
-- JWT Authentication
-- Role-Based Access Control
-- bcrypt Password Hashing
-- TOTP Multi-Factor Authentication
-- RSA Public Key Cryptography
-- AES-256-GCM Encryption
-- HTTPS Ready
-- Rate Limiting
-- Secure Session Management
-- Audit Logging
-
----
-
-# High-Level Architecture
+An *engagement* is one exercise at one institution. Every SOP uses the same engine (`server/src/engagement/sop.ts` holds the
+data, `engine.ts` the rules).
 
 ```text
-                         Users
-                           │
- ┌─────────────────────────┼─────────────────────────┐
- │                         │                         │
-Administrators      Compliance Officers      Institutions
- │                         │                         │
- └───────────────Web Application────────────┬────────┘
-                                            │
-                                   Express REST API
-                                            │
-           ┌────────────────────────────────┼─────────────────────────────┐
-           │                                │                             │
-      SQLite Database                 Workflow Engine               WebSockets
-           │                                │                             │
-           └───────────────Business Services──────────────────────────────┘
-                                            │
-                             AI • GIS • Reporting • Encryption
+Preliminary assessment ─► Concept note ─► Approved ─► Notification letter ─► Fieldwork
+   (2 working days)        (drafted,        (Executive    (signed by the        (RFD, meetings,
+                            reviewed)        Secretary)    Executive Secretary)  interviews, findings)
+                                                                                      │
+        ┌─────────────────────────────────────────────────────────────────────────────┘
+        ▼
+Implementation Matrix ─► Report ─► Prevention Committee ─► Commission ─► Completed ─► Monitoring ─► Closed
+(client comments,        (drafted    (recommends)           (Chairperson     (matrix         (3-month
+ sign-off, approvals)     and                                approves)        published)      re-checks)
+                          reviewed)
 ```
+
+Statuses: `Preliminary`, `ConceptDraft`, `ConceptReview`, `Approved`, `Notified`, `Fieldwork`, `IMReview`, `ReportDraft`,
+`ReportReview`, `Committee`, `Commission`, `Completed`, `Monitoring`, `Closed`, plus `Rejected` and `Cancelled`.
+
+### Approval chains
+
+| Stage | Chain |
+|-------|-------|
+| Preliminary assessment | Manager → General Manager. The General Manager decides the method (RFD, RR or PCC) where the SOP needs one, and whether deployment is justified (if not, the engagement is cancelled). |
+| Concept note | Team Leader → *Provincial Head (provincial exercises only)* → Manager → General Manager → Executive Secretary. Integrity Committee Training and Pledge Signing use the short chain Manager → Executive Secretary. |
+| Implementation Matrix | Team Leader → Manager → General Manager → Executive Secretary |
+| Report | Team Leader → Manager → General Manager → Prevention and Corporate Governance Committee → Commission Chairperson |
+
+At each step the approver can **approve / recommend, return for correction or reject** (rejection only for the preliminary
+assessment and concept note). A comment is mandatory on return or reject. Every step is recorded with who, when and whether it
+was on time.
+
+### Timelines and escalation
+
+Step allowances (working days): Team Leader 1, Provincial Head 1, Manager 1, General Manager 2, Executive Secretary 1,
+Prevention Committee 10, Commission 10; report review steps use 2 / 2 / 3. An hourly scheduler:
+
+- escalates a step that has run past its due time (once);
+- reminds the Executive Secretary when a notification letter is overdue (due 2 days after approval);
+- reminds the team when a report draft is overdue;
+- alerts Monitoring Officers 14 days before monitoring is due;
+- marks Integrity Committee deliverables overdue and expires certificates.
+
+Each alert is sent once per engagement. Reminders for recommendations and assessments use the configurable workflow settings.
+Administrators can trigger a sweep at once with `POST /api/v1/admin/run-scheduler`.
+
+### Reference numbers
+
+Engagements are numbered `ZACC/CSR/<year>/<nnn>`; notification letters `ZACC/PREV/CSR/<year>/<nnn>`.
+
+### Who can do what on an engagement
+
+| Action | Who |
+|--------|-----|
+| Create | Compliance Officer, Systems Reviewer, Monitoring Officer, Provincial Head, Manager, Super Admin |
+| Allocate team (Team Leader, Focal Person, members) | Manager; the creator while still drafting |
+| Edit concept note, record fieldwork and findings | Manager, creator and team members |
+| Decide at a step | The role named for that step (Team Leader step: the engagement's Team Leader). Super Admin may act at any step. |
+| Sign and issue the notification letter | Executive Secretary |
+| Comment on the draft matrix and sign it for the institution | Institution Focal Person (own institution) |
+| Send monitoring notice, record visits | Manager, officers, Monitoring Officer |
+| Issue certificate | General Manager, Executive Secretary |
+| Propose regulator measures | General Manager, Executive Secretary, Manager (non-compliant institutions only) |
+| Cancel | Manager, General Manager, Executive Secretary |
+
+Institution users see a **redacted view**: no budget, internal approvals or notes; the engagement only appears after the
+notification letter is issued; the matrix is visible from the matrix review stage onwards.
 
 ---
 
-# Enterprise Solution Architecture
+## 4. The eight SOPs
+
+| SOP | Minimum days | Matrix | Report | Monitoring | Notes |
+|-----|:-----------:|:------:|:------:|:----------:|-------|
+| Compliance Assessment (spot, desk or comprehensive check) | 2 | ✔ | ✔ | ✔ | Method RFD / RR / PCC set by the General Manager |
+| Systems and Processes Review | 10 | ✔ | ✔ | ✔ | Systems and Processes Matrix |
+| Monitoring of Audit Recommendations | 2 | | ✔ | | |
+| Monitoring of Government Funded Projects | 2 | | ✔ | | |
+| Monitoring of Government Funded Programmes | 2 | | ✔ | | |
+| Monitoring of Integrity Committee Initiatives | 2 | | ✔ | | |
+| Integrity Committee Training | 1 | | | ✔ | Completed with a return form (see below) |
+| Integrity Pledge Signing | 1 | | | ✔ | Completed with the ceremony record (see below) |
+
+Each SOP supplies its triggers, default objectives, methodology, expected outcomes, the list of documents to request and how
+compliance is evaluated, so the concept note can be filled from the SOP in one click.
+
+**Integrity Committee Training** completes with: training date, members trained (at least three), and whether HRM, Legal and
+Audit are represented, plus topics and trainers. The return form schedules four deliverables due 30 days later: corruption risk
+matrix, integrity action plan, integrity charter and workplan.
+
+**Pledge Signing** completes with the ceremony date, number signed, Commissioner of Oaths and **three printed copies**
+(individual, HR file, ZACC). A pledge record is created; pledges are renewable annually.
+
+### Concept note contents
+
+Title, what prompted the exercise, kind of check, background, allegations (or rationale), scope, objectives, methodology,
+expected outcomes, dates and days, **team** (one Team Leader, one Focal Person, members), **itinerary** by day (activity type and
+distance), **budget in USD** (quantity × unit cost × persons × days; a standard template for fuel, accommodation and meals) and a
+request-for-documents register. Objectives and methodology can be suggested from the allegations (tenders, recruitment, land,
+funds, interference, assets).
+
+### Fieldwork records
+
+Entrance and exit meetings, interview minutes (kept by the Team Leader), the RFD register (Requested / Received / Outstanding /
+Not available) and findings: issue, finding points, legal reference, category, severity, rating (Compliant / Partially
+compliant / Non-compliant), recommendation, responsibility, time frame, due date and an optional **referral to Investigations**
+for suspected corruption outside the compliance mandate. A single finding can also be added without touching the rest of the
+matrix (used by offline capture).
+
+---
+
+## 5. Generated documents
+
+Generated on demand from the stored data, on the ZACC letterhead (contact blocks either side of the colour logo, black-and-white
+tables, USD budgets). Download buttons are on the engagement page; the API is `GET /api/v1/engagements/:id/docs/:kind`.
+
+| Kind | Format | Content |
+|------|--------|---------|
+| `concept-note` | Word | Background, allegations, objectives, scope, methodology, team, resource requirements, expected outcomes, sign-off blocks |
+| `memorandum` | Word | Unit → General Manager and General Manager → Executive Secretary memoranda with the budget |
+| `notification-letter` | Word | Letter to the institution, signed by the Executive Secretary |
+| `report` | Word | Compliance Assessment / Systems Report with team, findings and conclusion |
+| `matrix` | Word (landscape) | Implementation Matrix with the level of compliance and signature lines for both parties |
+| `monitoring-notice` | Word | Notice of the monitoring visit |
+| `certificate` | PDF | Compliance certificate (landscape, double border, logo) |
+
+Approvers appear **by position only** on letters and sign-off blocks (for example "General Manager Prevention and Corporate
+Governance"), not by personal name. Team Leader and Focal Person names are printed.
+Institution users can download only the notification letter and the matrix. The matrix is also available as CSV.
+
+---
+
+## 6. Monitoring, registers and certification
+
+### Ratings
+
+An engagement's level comes from its findings (Compliant findings are ignored):
+**Green** = every recommendation implemented, **Red** = none implemented, otherwise **Amber**.
+Monitoring is due **three months** after completion. Each monitoring visit updates the status of every recommendation and
+re-rates the institution, so movement Red → Amber → Green is recorded. Updating a recommendation in the recommendation tracker
+updates the matching matrix row, and the reverse.
+
+### Pages (left-hand navigation, depending on role)
+
+| Page | What it shows |
+|------|---------------|
+| **ECMD** | Latest rating for every institution with a completed assessment or review, rating history, next monitoring date, certificate and open regulator measures |
+| **Monitoring plan** | Per quarter: monitoring visits (including overdue), Red follow-ups, certificate expiries, Integrity Committee deliverables, fund acquittals outstanding; printable |
+| **Audit findings** | Auditor-General (IPSAS), internal audit and media findings by institution and year; repeat findings across years detected by text similarity; bulk import; "Track" turns a finding into a recommendation with reminders and escalation |
+| **Funds** | Devolution Funds, ZINARA and other disbursements with spent, legacy debt paid and variance. Flags: acquittal overdue (60 days after quarter end), legacy debt above 40%, overspent, acquitted with variance. CSV export |
+| **Projects and programmes** | Budget and spend, reported progress against progress **verified on site**; flags for reporting ahead of verification, spend ahead of progress, past end date |
+| **IC monitoring** | Integrity Committees: deliverables, quarterly reports, annual impact assessment, training return forms |
+| **Certificates** | Certificates (Green only, valid 12 months, expiry warnings) and regulator measures (limit devolution funds, suspend government contracts, suspend tax holidays, stock-exchange delisting, other) with approval status |
+
+---
+
+## 7. Roles and access
+
+Fourteen roles. Team Leader and Focal Person are per-engagement roles, not accounts types.
+
+| Role | Main responsibility |
+|------|---------------------|
+| `SUPER_ADMIN` | Platform administration, users, workflow settings, audit log, can act at any approval step |
+| `COMMISSION_CHAIR` | Approves reports (Commission stage) |
+| `PREVENTION_COMMITTEE` | Recommends reports (Prevention and Corporate Governance Committee stage) |
+| `EXECUTIVE_SECRETARY` | Approves concept notes and matrices; signs notification letters; issues certificates |
+| `GM_PREVENTION` | General Manager, Prevention and Corporate Governance: recommends at every stage, decides method, issues certificates |
+| `MANAGER_COMPLIANCE` | Manager, Compliance and Systems Review: allocates teams, recommends, oversees monitoring |
+| `PROVINCIAL_HEAD` | Reviews provincial exercises; sees **only their province** |
+| `COMPLIANCE_OFFICER` | Plans and conducts compliance exercises; can be Team Leader |
+| `SYSTEMS_REVIEWER` | Conducts systems and processes reviews |
+| `MONITORING_OFFICER` | Verifies recommendations, monitoring visits and notices |
+| `AUDITOR` | Read access to audit-oriented dashboards, findings library and AI log |
+| `INVESTIGATIONS_OFFICER` | Whistleblower cases and referrals |
+| `INSTITUTION_FOCAL_PERSON` | Institution-side contact: responds to recommendations, comments on and signs the matrix |
+| `INTEGRITY_COMMITTEE_CHAIR` | Institution-side Integrity Committee management and deliverables |
+
+### Scoping (enforced on the server, not only in the interface)
+
+- **Institution roles** are pinned to their own institution. A record id belonging to another institution returns `404`;
+  exports, registers and bulk operations are refused; staff-only modules return `403`.
+- **Provincial Heads** are pinned to their province in the registers, ECMD, monitoring plan, institutions, assessments,
+  recommendations, committees and dashboard totals; asking for another province returns `403`.
+- Staff-only modules (systems reviews, procurement, reports, AI, GIS detail, workflow configuration, AI governance) are closed to
+  institution users.
+
+---
+
+## 8. Other modules
+
+| Module | Highlights |
+|--------|------------|
+| **Institutional registry** | Name, type, sector, ownership, province, district, coordinates, risk level, history, summary |
+| **Compliance assessments** | Checklist by section with weights Governance 20%, Internal Controls 25%, Procurement 20%, Financial Management 20%, Integrity 15%; Compliant = 100, Partially compliant = 50, Non-compliant = 0; composite score ≥ 75 **Green**, ≥ 50 **Amber**, otherwise **Red**; evidence upload (15 MB limit) and geotags; submission and review workflow with SLA |
+| **Systems reviews** | Findings, versioned documents with download, duplicate-finding detection, status workflow, SLA escalation (once) |
+| **Recommendation tracker** | Created → Assigned → Response submitted → Closed (or Incomplete), evidence upload, verification by Monitoring Officer, reminder and escalation levels, CSV register |
+| **Corruption risk register** | Likelihood × impact (score ≥ 20 Critical, ≥ 13 High, ≥ 6 Medium, otherwise Low), residual risk from control effectiveness, mitigations, heat map, trends, CSV |
+| **Procurement monitoring** | Red flags: single source above USD 25,000, split purchases (above USD 40,000 combined, same supplier and institution within 30 days), supplier concentration (one supplier across 3 or more institutions in 60 days), among others |
+| **Integrity Committees** | Registration, charter, members, trainings, meetings, action plans |
+| **Integrity pledges** | Pledges, signatories, bulk upload, ceremony (three copies), renewal, expiry reminders |
+| **Whistleblower** | See [Security](#11-security); anonymous submission with tracking code, investigation workflow, access log, referral |
+| **GIS** | Province map (public aggregate), institution layer, compliance and risk heat maps |
+| **Dashboards and reports** | Overview tiles scoped to the user; overdue-recommendation ageing, high-risk institutions, implementation rate; awaiting-my-action list; reports and CSV exports |
+| **Notifications** | In-app (live push), email and SMS outbox; per-user preferences; 25 templates including every engagement step, reminder and escalation |
+| **Audit log** | Immutable record of sensitive actions and status transitions |
+| **Search** | Natural-language search across records |
+
+---
+
+## 9. AI features and AI governance
+
+The AI features are **deterministic, rule-based and explainable**; no external language model is called.
+
+| Feature | Method |
+|---------|--------|
+| Assessment narrative draft | Template assembled from checklist responses and section scores |
+| Systems review summary | Extractive: highest-scoring sentences are kept verbatim |
+| Duplicate-finding detection | Word-set similarity (Jaccard) |
+| Risk trend prediction | Ordinary least-squares line through past composite scores |
+| Natural-language search | Keyword relevance ranking |
+
+**Governance controls (page *AI governance*):**
+
+- Every AI output is logged with model version, input summary, output and an explanation (method, limitations, factors, confidence).
+- A named officer must **Accept**, **Modify** or **Override** it; a reason is required for Modify and Override; an output can be reviewed once.
+  A drafted narrative is stored as a proposal and applied to the assessment only when accepted or modified.
+- The **bias and override monitor** (General Manager, Manager, Auditor, Super Admin) reports override rates per feature
+  and per reviewer, and compares adverse AI outcomes across provinces and institution types, with alerts for high override
+  rates or disparities.
+
+---
+
+## 10. Offline field capture, languages and accessibility
+
+**Field capture** (`/app/field-capture`) records findings, interview minutes and meetings against an engagement in Fieldwork,
+optionally stamped with the GPS position. When the device is offline, records go into an on-device queue (IndexedDB) and upload
+**in order** when the connection returns. A record the server rejects is marked failed and shown for discarding, so one bad
+record never blocks the rest. The queue holds only records not yet uploaded. The app shell is cached for offline start;
+**authenticated API responses are never cached**, and the cached engagement list is removed at sign-out.
+
+**Languages:** English, Shona and Ndebele, chosen in the header or in Settings, applied to navigation and common actions.
+Case content stays in the language it was written in. *Shona and Ndebele wording must be reviewed by native speakers before
+release.*
+
+**Accessibility (aiming at WCAG 2.1 AA):** skip link, labelled form controls, dialog semantics with focus trap and Escape,
+`role="switch"` for toggles, table captions and header scopes, visible focus, status and alert announcements, text labels for
+all status colours, print styles (black and white, no navigation) for plans and registers. A full audit with assistive
+technology users is still recommended.
+
+---
+
+## 11. Security
+
+| Control | Detail |
+|---------|--------|
+| Authentication | Email and password (bcrypt), then **mandatory TOTP MFA** (enrolment at first sign-in); short-lived access token and refresh token |
+| Password policy | 10+ characters with upper case, lower case and a digit; temporary passwords are random and must be changed at first sign-in (until then the session can only change the password); a password change revokes other sessions |
+| Throttling | Sign-in and MFA attempts limited to 10 per 15 minutes per account (by email, or by user within an MFA challenge), falling back to IP |
+| Authorisation | Role checks on every route plus institution and province scoping in middleware |
+| Production safety | The server refuses to start in production without `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET` and `JWT_MFA_SECRET`; unexpected errors return a generic message |
+| Transport and headers | Helmet headers, CORS limited to `CORS_ORIGIN`, compression; run behind HTTPS in production |
+| Exports | CSV cells starting `=`, `+`, `-` or `@` are neutralised against spreadsheet formula injection |
+| Whistleblower channel | The report is encrypted **in the reporter's browser** with a random AES-256-GCM key, which is wrapped with the Investigations RSA-OAEP public key. The server stores only ciphertext; an Investigations Officer opening a report decrypts it with the server's private key and the access is logged. A tracking code lets the reporter follow progress anonymously. |
+| Audit | Sensitive actions and every status transition are recorded and cannot be edited |
+
+> **Key custody:** the whistleblower private key is generated on first start and stored in `DATA_DIR/keys`. It is not zero-knowledge
+> against a fully compromised server. Before real reporters use the channel, move the key into an HSM or vault, or split it
+> among custodians.
+
+---
+
+## 12. Architecture and project structure
 
 ```text
-                           Internet
-                               │
-                        HTTPS / TLS
-                               │
-                      React + TypeScript
-                               │
-                       REST API Gateway
-                               │
-                       Express Application
-                               │
- ┌───────────────┬──────────────┬──────────────┬──────────────┐
- │               │              │              │              │
-Compliance    Workflow       GIS Engine     AI Engine    Reporting
- │               │              │              │              │
- └───────────────┴──────────────┴──────────────┴──────────────┘
-                               │
-                           SQLite Database
+ Browser (React 18 PWA, offline outbox, i18n)
+        │  HTTPS   REST /api/v1  +  Socket.IO
+        ▼
+ Express API ── auth · scope · role checks · rate limit
+        │
+        ├── Engagement engine (SOP data, chains, SLAs, decisions)
+        ├── Document builders (docx, pdfkit)         ├── Scheduler (hourly node-cron)
+        ├── Monitoring registers, ECMD, plan          ├── Notification service (in-app, email/SMS outbox)
+        ├── AI helpers + AI governance log            └── Whistleblower crypto
+        ▼
+ SQLite (better-sqlite3, WAL)  +  uploads on disk      → production path: PostgreSQL + object storage
 ```
-
----
-
-# Enterprise Benefits
-
-## Operational Benefits
-
-- Reduced administrative workload
-- Faster compliance assessments
-- Improved recommendation tracking
-- Better institutional visibility
-- Improved workflow efficiency
-- Reduced paper-based processes
-
----
-
-## Governance Benefits
-
-- Improved transparency
-- Better accountability
-- Evidence-based governance
-- Stronger institutional oversight
-- Enhanced corruption prevention
-- Improved compliance monitoring
-
----
-
-## Strategic Benefits
-
-- National governance insights
-- Executive decision support
-- Digital transformation
-- Standardised compliance frameworks
-- Increased institutional maturity
-- Scalable government platform
-
----
-
-# Getting Started
-
-## System Requirements
-
-The platform has minimal infrastructure requirements.
-
-### Required Software
-
-| Software | Version |
-|-----------|----------|
-| Node.js | 20+ |
-| npm | Latest |
-| Git | Latest |
-
-No external database server is required for development because SQLite is bundled with the application.
-
----
-
-# Installation
-
-Clone the repository.
-
-```bash
-git clone https://github.com/<organisation>/zacc-institutional-compliance-portal.git
-
-cd zacc-institutional-compliance-portal
-```
-
-Install project dependencies.
-
-```bash
-npm install
-```
-
-Run the project setup.
-
-```bash
-npm run setup
-```
-
-Start the application.
-
-```bash
-npm run start
-```
-
-The application will automatically:
-
-- Initialise SQLite
-- Create database schema
-- Seed default configuration
-- Build required assets
-- Launch backend services
-- Start frontend application
-
----
-
-# Default Development URLs
-
-| Service | URL |
-|----------|------|
-| Frontend | http://localhost:5173 |
-| Backend API | http://localhost:4000 |
-| Health Endpoint | http://localhost:4000/health |
-| WebSocket | ws://localhost:4000 |
-
----
-# Development Environment
-
-The ZACC Institutional Compliance Portal supports both development and production environments. The development environment has been designed for rapid deployment with minimal configuration while preserving enterprise-grade architectural principles.
-
----
-
-## Development Installation
-
-Install all project dependencies.
-
-```bash
-npm run install:all
-```
-
-Seed the application with demonstration data.
-
-```bash
-npm run seed
-```
-
-Start both frontend and backend development servers.
-
-```bash
-npm run dev
-```
-
-The development environment automatically provides:
-
-- SQLite database initialization
-- Sample institutions
-- Sample users
-- Sample compliance assessments
-- Risk registers
-- GIS datasets
-- Demo dashboards
-- WebSocket server
-- Authentication services
-
----
-
-# Development URLs
-
-| Component | URL |
-|------------|-----|
-| Client Application | http://localhost:5173 |
-| Backend API | http://localhost:4000 |
-| API Health | http://localhost:4000/health |
-| WebSocket Server | ws://localhost:4000 |
-| API Documentation | http://localhost:4000/api/docs *(optional)* |
-
----
-
-# Demo Users
-
-The seed process creates demonstration users representing various institutional roles.
-
-Default Password
 
 ```text
-ZaccDemo#2026
-```
-
----
-
-## Available Roles
-
-| Role | Responsibility |
-|------|----------------|
-| Super Administrator | Complete platform administration |
-| Prevention Director | National oversight |
-| Compliance Officer | Compliance monitoring |
-| Systems Reviewer | Systems reviews |
-| Monitoring Officer | Monitoring implementation |
-| Internal Auditor | Audit activities |
-| Investigations Officer | Investigation management |
-| Institutional Focal Person | Institution coordination |
-| Committee Chairperson | Integrity committee management |
-
-Every user is required to complete Multi-Factor Authentication (MFA) enrollment during their first login.
-
----
-
-# Environment Configuration
-
-The platform uses environment variables for runtime configuration.
-
-Copy:
-
-```text
-.env.example
-```
-
-to:
-
-```text
-.env
-```
-
----
-
-## Application Configuration
-
-```env
-NODE_ENV=
-
-PORT=
-
-CLIENT_URL=
-
-JWT_SECRET=
-
-JWT_EXPIRES_IN=
-```
-
----
-
-## Database
-
-```env
-DATABASE_PATH=
-
-DATABASE_BACKUP_PATH=
-```
-
----
-
-## Authentication
-
-```env
-JWT_SECRET=
-
-JWT_REFRESH_SECRET=
-
-JWT_EXPIRY=
-
-JWT_REFRESH_EXPIRY=
-```
-
----
-
-## Multi-Factor Authentication
-
-```env
-MFA_ISSUER=
-
-TOTP_WINDOW=
-```
-
----
-
-## WebSockets
-
-```env
-SOCKET_PORT=
-```
-
----
-
-## Email (Optional)
-
-```env
-SMTP_HOST=
-
-SMTP_PORT=
-
-SMTP_USER=
-
-SMTP_PASSWORD=
-```
-
----
-
-## GIS
-
-```env
-MAP_DEFAULT_LATITUDE=
-
-MAP_DEFAULT_LONGITUDE=
-
-MAP_DEFAULT_ZOOM=
-```
-
----
-
-# Project Structure
-
-```text
-zacc-institutional-compliance-portal/
-
-├── client/
-│
+.
+├── package.json                 root scripts (install:all, seed, dev, build, start, setup, demo)
+├── IMPROVEMENTS.md              what was built against the improvement review
+├── docs/MIGRATION.md            PostgreSQL / object-storage path
 ├── server/
-│
-├── docs/
-│
-├── scripts/
-│
-├── uploads/
-│
-├── package.json
-│
-├── README.md
-│
-└── .env.example
+│   ├── .env.example
+│   ├── assets/                  letterhead logo
+│   ├── data/                    created at run time: database, uploads, keys (git-ignored)
+│   ├── test/e2e.js              end-to-end test (181 checks)
+│   └── src/
+│       ├── app.ts, server.ts, socket.ts
+│       ├── db/                  schema.sql, seed.ts, index.ts
+│       ├── engagement/          sop.ts (the eight SOPs), engine.ts (workflow rules)
+│       ├── docs/                layout.ts (letterhead), builders.ts (Word), certificate.ts (PDF)
+│       ├── jobs/scheduler.ts    reminders, escalation, expiry
+│       ├── middleware/          auth, scope, rateLimit, errorHandler
+│       ├── routes/              one file per module
+│       └── utils/               scoring, riskEngine, procurementRules, ai, aiGov, crypto, notify, jwt, mfa, csv, pdf, gis
+└── client/
+    ├── vite.config.ts           PWA (offline shell only)
+    └── src/
+        ├── pages/               engagements, registers, officer, reviewer, monitoring, committee,
+        │                        institution, investigations, admin, shared, public, auth
+        ├── components/          layout (navigation by role), common UI
+        ├── i18n/                English, Shona, Ndebele
+        ├── offline/             on-device queue, online status
+        └── context/, api/, routes/, types/
 ```
 
----
-
-# Detailed Directory Structure
-
-```text
-server
-│
-├── src
-│
-├── api
-│
-├── auth
-│
-├── compliance
-│
-├── committees
-│
-├── dashboard
-│
-├── encryption
-│
-├── gis
-│
-├── institutions
-│
-├── investigations
-│
-├── middleware
-│
-├── notifications
-│
-├── procurement
-│
-├── recommendations
-│
-├── reporting
-│
-├── reviews
-│
-├── risks
-│
-├── users
-│
-├── websocket
-│
-└── workflow
-```
-
----
-
-# Authentication & Identity Management
-
-The platform implements enterprise authentication suitable for government environments.
-
-Authentication follows modern security principles, ensuring that only verified users gain access to institutional data.
-
----
-
-## Authentication Features
-
-- Secure Login
-- JWT Authentication
-- Refresh Tokens
-- Password Encryption
-- Multi-Factor Authentication
-- Session Validation
-- Secure Logout
-- Password Reset
-- Account Lockout
-- Login Auditing
-
----
-
-## Authentication Flow
-
-```text
-User Login
-      │
-Username & Password
-      │
-Credential Validation
-      │
-JWT Generation
-      │
-MFA Verification
-      │
-Role Validation
-      │
-Secure Session
-      │
-Access Granted
-```
-
----
-
-# Multi-Factor Authentication
-
-Every privileged account supports Time-Based One-Time Password (TOTP) authentication.
-
-Supported authenticator applications include:
-
-- Microsoft Authenticator
-- Google Authenticator
-- Authy
-- FreeOTP
-
-MFA enrolment is mandatory during first login for privileged users.
-
----
-
-# Role-Based Access Control (RBAC)
-
-Authorization is implemented using Role-Based Access Control.
-
-Each user receives permissions based upon organisational responsibilities.
-
----
-
-## Supported Roles
-
-| Role | Access Level |
-|--------|-------------|
-| Super Administrator | Full platform control |
-| Prevention Director | National dashboards |
-| Compliance Officer | Compliance operations |
-| Systems Reviewer | Systems reviews |
-| Monitoring Officer | Monitoring activities |
-| Auditor | Read-only audit access |
-| Investigations Officer | Whistleblower investigations |
-| Institution User | Institution-specific access |
-
----
-
-## Permission Categories
-
-The permission engine controls access to:
-
-- Institutions
-- Compliance Assessments
-- Recommendations
-- Systems Reviews
-- Risk Registers
-- Integrity Committees
-- GIS
-- Reports
-- Dashboards
-- Users
-- Administration
-
-Permissions are centrally managed and evaluated on every secured API request.
-
----
-
-# Institutional Registry Module
-
-The Institutional Registry serves as the foundation of the entire platform.
-
-Every compliance assessment, recommendation, systems review, and corruption risk assessment is linked to a registered institution.
-
----
-
-## Core Features
-
-- Institution Registration
-- Institution Classification
-- Province Assignment
-- Sector Assignment
-- Contact Management
-- Institutional Profile
-- Status Tracking
-- Risk Categorisation
-- Audit History
-
----
-
-## Institution Profile
-
-Each institution maintains:
-
-- Official Name
-- Ministry
-- Province
-- District
-- Physical Address
-- Contact Persons
-- Geographic Coordinates
-- Risk Classification
-- Compliance Status
-- Historical Assessments
-
----
-
-## Institution Lifecycle
-
-```text
-Institution Registration
-           │
-Profile Validation
-           │
-Compliance Assessment
-           │
-Recommendation Tracking
-           │
-Monitoring
-           │
-Performance Reporting
-```
-
----
-
-# Compliance Assessment Engine
-
-The Compliance Assessment Engine evaluates institutional governance using weighted assessment frameworks.
-
-The engine automatically calculates institutional compliance scores while preserving transparency and repeatability.
-
----
-
-## Assessment Framework
-
-The default assessment framework evaluates five governance domains.
-
-| Assessment Area | Weight |
-|-----------------|-------:|
-| Governance | 20% |
-| Internal Controls | 25% |
-| Procurement | 20% |
-| Financial Management | 20% |
-| Integrity | 15% |
-
-Additional frameworks may be configured for sector-specific assessments.
-
----
-
-## Assessment Workflow
-
-```text
-Assessment Scheduled
-          │
-Evidence Collection
-          │
-Compliance Evaluation
-          │
-Weighted Scoring
-          │
-Recommendation Generation
-          │
-Management Review
-          │
-Approval
-          │
-Publication
-```
-
----
-
-## Compliance Scoring
-
-Scores are automatically converted into performance categories.
-
-| Score | Rating |
-|--------|---------|
-| 90–100 | Excellent |
-| 75–89 | Good |
-| 60–74 | Satisfactory |
-| 40–59 | Needs Improvement |
-| Below 40 | Critical |
-
-These thresholds can be customised by administrators.
-
----
-
-# Workflow Engine
-
-The Workflow Engine orchestrates every major business process across the platform.
-
-It provides configurable workflows that support governance, approvals, escalations, and monitoring.
-
----
-
-## Workflow Features
-
-- Task Assignment
-- Approval Chains
-- SLA Tracking
-- Escalation Rules
-- Notifications
-- Deadline Monitoring
-- Workflow History
-- Activity Logging
-
----
-
-## Workflow Lifecycle
-
-```text
-Task Created
-      │
-Assignment
-      │
-Review
-      │
-Approval
-      │
-Implementation
-      │
-Verification
-      │
-Completed
-```
-
----
-
-## Service Level Agreements (SLA)
-
-Every workflow can define:
-
-- Target Completion Date
-- Escalation Thresholds
-- Reminder Intervals
-- Responsible Officers
-- Approval Authorities
-
-The platform automatically notifies responsible users when deadlines approach or are exceeded.
-
----
-# Systems Review Module
-
-The Systems Review Module enables the Zimbabwe Anti-Corruption Commission to conduct structured institutional systems reviews that identify governance weaknesses, process inefficiencies, corruption vulnerabilities, and control deficiencies.
-
-Unlike traditional audits, systems reviews evaluate the adequacy of governance processes, policies, procedures, and internal controls to determine whether institutional systems effectively prevent corruption and promote accountability.
-
----
-
-## Core Features
-
-- Annual Review Planning
-- Review Registration
-- Team Assignment
-- Terms of Reference
-- Working Papers
-- Evidence Collection
-- Observation Recording
-- Finding Classification
-- Recommendation Generation
-- Review Approval
-- Report Publication
-
----
-
-## Systems Review Lifecycle
-
-```text
-Review Planning
-        │
-Institution Selection
-        │
-Review Team Assignment
-        │
-Field Work
-        │
-Evidence Collection
-        │
-Analysis
-        │
-Findings
-        │
-Recommendations
-        │
-Management Response
-        │
-Approval
-        │
-Final Report
-```
-
----
-
-## Review Categories
-
-The platform supports multiple review types including:
-
-- Governance Reviews
-- Procurement Reviews
-- Financial Systems Reviews
-- Human Resources Reviews
-- ICT Governance Reviews
-- Asset Management Reviews
-- Revenue Management Reviews
-- Risk Management Reviews
-- Compliance Reviews
-- Ethics Reviews
-
----
-
-## Evidence Management
-
-Each review supports secure evidence management including:
-
-- Document Uploads
-- Photographs
-- Video Evidence
-- Audio Recordings
-- Meeting Minutes
-- Signed Statements
-- Supporting Reports
-- Working Papers
-
-Evidence is version-controlled and linked directly to review findings.
-
----
-
-# Findings Management
-
-Findings identified during systems reviews are centrally managed to ensure traceability and accountability.
-
----
-
-## Finding Attributes
-
-Each finding records:
-
-- Finding Reference Number
-- Title
-- Detailed Description
-- Root Cause
-- Risk Level
-- Impact Assessment
-- Evidence References
-- Responsible Institution
-- Review Reference
-- Status
-- Date Raised
-- Reviewer
-
----
-
-## Risk Classification
-
-Findings are categorised by severity.
-
-| Rating | Description |
-|----------|-------------|
-| Critical | Immediate intervention required |
-| High | Significant governance risk |
-| Medium | Moderate control weakness |
-| Low | Minor improvement opportunity |
-| Advisory | Good practice recommendation |
-
----
-
-# Recommendation Management
-
-Recommendations are automatically generated from findings and monitored until full implementation.
-
-The recommendation engine provides complete lifecycle management with verification and closure processes.
-
----
-
-## Recommendation Features
-
-- Recommendation Register
-- Action Plans
-- Responsible Officers
-- Due Dates
-- Progress Updates
-- Evidence Submission
-- Verification Workflow
-- Closure Approval
-- Reminder Notifications
-- Escalation Management
-
----
-
-## Recommendation Lifecycle
-
-```text
-Finding Created
-       │
-Recommendation Generated
-       │
-Institution Accepts
-       │
-Action Plan
-       │
-Implementation
-       │
-Evidence Submitted
-       │
-Verification
-       │
-Closure
-```
-
----
-
-## Recommendation Statuses
-
-- Draft
-- Submitted
-- Accepted
-- In Progress
-- Awaiting Verification
-- Verified
-- Closed
-- Overdue
-
----
-
-## Performance Indicators
-
-The recommendation dashboard provides:
-
-- Total Recommendations
-- Completed Recommendations
-- Overdue Recommendations
-- Average Closure Time
-- Institution Performance
-- Provincial Performance
-- National Trends
-
----
-
-# Integrity Committee Management
-
-Integrity Committees play a central role in institutional governance.
-
-The platform enables ZACC to monitor committee establishment, membership, activities, and performance across all participating institutions.
-
----
-
-## Features
-
-- Committee Registration
-- Membership Management
-- Meeting Scheduling
-- Attendance Tracking
-- Action Plans
-- Meeting Minutes
-- Resolution Tracking
-- Annual Work Plans
-- Committee Performance
-
----
-
-## Committee Workflow
-
-```text
-Committee Created
-        │
-Members Appointed
-        │
-Meeting Scheduled
-        │
-Agenda Prepared
-        │
-Meeting Conducted
-        │
-Minutes Approved
-        │
-Actions Assigned
-        │
-Progress Monitored
-```
-
----
-
-## Committee Roles
-
-Supported committee positions include:
-
-- Chairperson
-- Vice Chairperson
-- Secretary
-- Member
-- Observer
-- ZACC Liaison Officer
-
----
-
-# Integrity Pledge Management
-
-The platform supports electronic integrity pledges signed by institutional employees.
-
----
-
-## Features
-
-- Digital Pledge Creation
-- Employee Acceptance
-- Electronic Signature Support
-- Renewal Tracking
-- Historical Archive
-- Compliance Monitoring
-
----
-
-# Corruption Risk Register
-
-The Corruption Risk Register provides a structured framework for identifying, analysing, evaluating, and mitigating corruption risks.
-
----
-
-## Core Features
-
-- Risk Identification
-- Risk Assessment
-- Risk Owners
-- Control Evaluation
-- Residual Risk
-- Mitigation Planning
-- Monitoring
-- Reporting
-
----
-
-## Risk Workflow
-
-```text
-Risk Identified
-       │
-Risk Assessment
-       │
-Control Evaluation
-       │
-Residual Risk
-       │
-Mitigation Plan
-       │
-Implementation
-       │
-Monitoring
-       │
-Review
-```
-
----
-
-## Risk Matrix
-
-Risks are evaluated using a likelihood versus impact matrix.
-
-| Likelihood | Impact | Rating |
-|-------------|---------|--------|
-| Low | Low | Low |
-| Medium | Medium | Moderate |
-| High | Medium | High |
-| High | High | Critical |
-
----
-
-## Risk Categories
+**Technology:** Node.js 20, TypeScript, Express, better-sqlite3, Socket.IO, node-cron, docx, pdfkit, bcryptjs, jsonwebtoken, otplib;
+React 18, Vite 5, Tailwind CSS 3, React Router 6, Recharts, lucide-react, vite-plugin-pwa (Workbox).
 
-Supported categories include:
-
-- Procurement
-- Human Resources
-- Financial Management
-- Asset Management
-- Revenue Collection
-- Information Technology
-- Governance
-- Ethics
-- Strategic Risk
-- Operational Risk
-
----
-
-# Procurement Monitoring Module
-
-Procurement activities represent one of the highest corruption risk areas within public institutions.
-
-The Procurement Monitoring Module provides advanced analytics and compliance monitoring to detect procurement anomalies and support preventative oversight.
-
----
-
-## Capabilities
-
-- Procurement Register
-- Supplier Register
-- Contract Register
-- Tender Tracking
-- Threshold Monitoring
-- Vendor Analysis
-- Procurement Dashboards
-- Exception Reporting
-
----
-
-## Automated Detection Rules
-
-The platform identifies potential procurement irregularities including:
-
-- Split Procurement
-- Repeat Supplier Awards
-- Single Source Procurement
-- Excessive Variations
-- Contract Extensions
-- Duplicate Suppliers
-- Threshold Breaches
-- Irregular Evaluation Patterns
-
----
-
-## Procurement Analytics
-
-Dashboards include:
-
-- Procurement Volume
-- Contract Values
-- Supplier Distribution
-- Average Procurement Cycle
-- High-Risk Procurements
-- Provincial Comparisons
-- Institution Rankings
-
----
-
-# Geographic Information System (GIS)
-
-The GIS module provides spatial intelligence for institutional monitoring and national governance analysis.
-
-Interactive maps allow users to visualise compliance performance, corruption risks, institutional distribution, and implementation progress across Zimbabwe.
-
----
-
-## GIS Features
-
-- Interactive National Map
-- Province Dashboard
-- District Mapping
-- Institution Locations
-- Compliance Heat Maps
-- Risk Heat Maps
-- Recommendation Density
-- Infrastructure Mapping
-
----
-
-## GIS Layers
-
-Supported map layers include:
-
-- Provinces
-- Districts
-- Institutions
-- Compliance Scores
-- Corruption Risk Levels
-- Active Reviews
-- Recommendations
-- Investigations
-
----
-
-## Spatial Analytics
-
-The GIS engine enables users to:
-
-- Compare provinces
-- Analyse regional trends
-- Identify high-risk clusters
-- Monitor institutional coverage
-- Evaluate implementation progress geographically
-
----
-
-# Executive Dashboards
-
-The Executive Dashboard provides real-time governance intelligence for senior leadership.
-
-Dashboards aggregate operational data into meaningful indicators that support strategic decision-making.
-
----
-
-## Executive KPIs
-
-- Institutions Registered
-- Compliance Assessments Completed
-- National Compliance Index
-- High-Risk Institutions
-- Open Recommendations
-- Overdue Recommendations
-- Active Systems Reviews
-- Procurement Exceptions
-- Integrity Committee Coverage
-- Provincial Performance Rankings
-
----
-
-## Dashboard Widgets
-
-The executive dashboard includes:
-
-- KPI Cards
-- Trend Charts
-- Province Comparison
-- Heat Maps
-- Risk Indicators
-- Compliance Distribution
-- Interactive Tables
-- GIS Visualisations
-
----
-
-# Artificial Intelligence & Analytics
-
-Artificial Intelligence enhances decision-making by assisting compliance officers with data analysis, report drafting, anomaly detection, and predictive governance insights.
-
----
-
-## AI Capabilities
-
-- Recommendation Drafting
-- Executive Summaries
-- Duplicate Finding Detection
-- Risk Prioritisation
-- Natural Language Search
-- Trend Detection
-- Predictive Compliance Analysis
-- Intelligent Report Generation
-
----
-
-## AI Workflow
-
-```text
-Institutional Data
-        │
-Data Processing
-        │
-AI Analysis
-        │
-Risk Detection
-        │
-Recommendation Generation
-        │
-Officer Review
-        │
-Final Decision
-```
-
----
-
-## Predictive Analytics
-
-The analytics engine provides forecasts for:
-
-- Compliance Trends
-- Recommendation Completion Rates
-- Institutional Risk Levels
-- Governance Performance
-- Procurement Risk
-- Review Backlogs
-
-The predictive models assist management in allocating resources, prioritising interventions, and proactively addressing emerging governance risks.
-
----
-# Secure Whistleblower Management
-
-The Whistleblower Management Module provides a secure and confidential mechanism for receiving, managing, and investigating reports of suspected corruption, fraud, abuse of office, maladministration, and other integrity-related concerns.
-
-The module has been designed around internationally recognised whistleblower protection principles to maximise confidentiality, accountability, and evidence integrity.
-
----
-
-## Core Features
-
-- Anonymous Reporting
-- Named Reporting
-- Secure Case Tracking
-- Encrypted Evidence Storage
-- Investigation Assignment
-- Case Workflow Management
-- Protected Communications
-- Follow-up Messaging
-- Audit Trail
-- Case Closure
-
----
-
-## Reporting Channels
-
-Whistleblower reports may be submitted through:
-
-- Web Portal
-- Secure Mobile Device
-- Internal Compliance Portal
-- Email Integration (Optional)
-- API Integration
-- Manual Registration by Authorised Officers
-
----
-
-## Whistleblower Workflow
-
-```text
-Report Submitted
-        │
-Reference Generated
-        │
-Initial Screening
-        │
-Risk Classification
-        │
-Case Assignment
-        │
-Evidence Collection
-        │
-Investigation
-        │
-Recommendations
-        │
-Management Action
-        │
-Case Closure
-```
-
----
-
-## Confidentiality Controls
-
-The platform protects whistleblower identities through:
-
-- Anonymous Submission
-- Encrypted Storage
-- Secure Case References
-- Restricted Investigator Access
-- Identity Separation
-- Audit Monitoring
-- Secure Attachments
-- Tamper Detection
-
----
-
-# Investigation Management
-
-The Investigation Module supports structured case management for allegations arising from whistleblower reports, systems reviews, compliance assessments, or management referrals.
-
----
-
-## Features
-
-- Investigation Registration
-- Investigator Assignment
-- Evidence Collection
-- Interview Scheduling
-- Timeline Management
-- Findings Recording
-- Recommendation Management
-- Investigation Reports
-- Case Closure
-
----
-
-## Investigation Lifecycle
-
-```text
-Case Created
-      │
-Assessment
-      │
-Investigator Assigned
-      │
-Evidence Collection
-      │
-Analysis
-      │
-Findings
-      │
-Recommendations
-      │
-Management Action
-      │
-Closed
-```
-
----
-
-# Notification & Communication Engine
-
-The Notification Engine delivers automated communications throughout the platform.
-
----
-
-## Supported Channels
-
-- Email
-- SMS
-- In-App Notifications
-- WebSocket Push Notifications
-
----
-
-## Automated Notifications
-
-Notifications are generated for:
-
-- Assessment Assignments
-- Review Approvals
-- Recommendation Due Dates
-- Overdue Actions
-- Risk Escalations
-- Investigation Assignments
-- Integrity Committee Meetings
-- Password Changes
-- Login Alerts
-- System Announcements
-
----
-
-# Reporting & Business Intelligence
-
-The Reporting Engine consolidates operational, strategic, and executive information into interactive dashboards and exportable reports.
-
----
-
-## Operational Reports
-
-- Institution Register
-- Compliance Assessments
-- Systems Reviews
-- Risk Registers
-- Recommendation Status
-- Committee Activities
-- Investigation Register
-- Procurement Monitoring
-
----
-
-## Executive Reports
-
-- National Compliance Index
-- Provincial Performance
-- High-Risk Institutions
-- Governance Maturity
-- Recommendation Ageing
-- Risk Heat Maps
-- Integrity Committee Coverage
-- Procurement Analytics
-
----
-
-## Export Formats
-
-Reports may be exported as:
-
-- PDF
-- Microsoft Excel
-- CSV
-- JSON
-
----
-
-# REST API
-
-The platform exposes a versioned RESTful API for secure integration with authorised systems.
-
----
-
-## Base URL
-
-Development
-
-```text
-http://localhost:4000/api/v1
-```
-
-Production
-
-```text
-https://compliance.zacc.org.zw/api/v1
-```
-
----
-
-## Authentication Endpoints
-
-| Method | Endpoint | Description |
-|---------|----------|-------------|
-| POST | `/auth/login` | User authentication |
-| POST | `/auth/logout` | End current session |
-| POST | `/auth/refresh` | Refresh JWT token |
-| POST | `/auth/reset-password` | Reset password |
-| POST | `/auth/mfa/verify` | Verify MFA |
-
 ---
 
-## Institution Endpoints
+## 13. Configuration
 
-| Method | Endpoint |
-|---------|----------|
-| GET | `/institutions` |
-| POST | `/institutions` |
-| PUT | `/institutions/{id}` |
-| DELETE | `/institutions/{id}` |
-
----
-
-## Compliance Endpoints
-
-| Method | Endpoint |
-|---------|----------|
-| GET | `/compliance/assessments` |
-| POST | `/compliance/assessments` |
-| PUT | `/compliance/assessments/{id}` |
-| GET | `/compliance/dashboard` |
-
----
-
-## Recommendation Endpoints
-
-| Method | Endpoint |
-|---------|----------|
-| GET | `/recommendations` |
-| POST | `/recommendations` |
-| PUT | `/recommendations/{id}` |
-| POST | `/recommendations/{id}/verify` |
-
----
-
-## Risk Register Endpoints
-
-| Method | Endpoint |
-|---------|----------|
-| GET | `/risks` |
-| POST | `/risks` |
-| PUT | `/risks/{id}` |
-| GET | `/risks/dashboard` |
-
----
-
-## GIS Endpoints
-
-| Method | Endpoint |
-|---------|----------|
-| GET | `/gis/provinces` |
-| GET | `/gis/institutions` |
-| GET | `/gis/heatmap` |
-| GET | `/gis/dashboard` |
-
----
-
-# Security Architecture
-
-Security has been implemented using a defence-in-depth approach suitable for government environments.
-
----
-
-## Identity & Access Security
-
-- JWT Authentication
-- Refresh Tokens
-- Multi-Factor Authentication (TOTP)
-- Password Hashing (bcrypt)
-- Role-Based Access Control (RBAC)
-- Fine-Grained Permissions
-- Session Timeout
-- Account Lockout
-
----
-
-## Data Protection
-
-Sensitive information is protected using:
-
-- AES-256-GCM Encryption
-- RSA Public Key Cryptography
-- Secure Password Hashing
-- Signed JWT Tokens
-- Encrypted File Storage
-- Secure Key Management
-
----
-
-## Application Security
-
-The application includes:
-
-- HTTPS Enforcement
-- Content Security Policy (CSP)
-- Helmet Security Headers
-- CORS Protection
-- CSRF Mitigation
-- Input Validation
-- Output Encoding
-- SQL Injection Prevention
-- XSS Protection
-- Rate Limiting
-
----
-
-## Audit Logging
-
-Every critical event is permanently recorded.
-
-Examples include:
-
-- Login Attempts
-- MFA Events
-- User Administration
-- Assessment Updates
-- Recommendation Changes
-- Investigation Activities
-- Report Generation
-- Permission Changes
-- System Configuration
-- API Access
-
-Audit records are immutable and available for forensic review.
-
----
-
-# Deployment
-
-The platform supports multiple deployment models.
-
----
-
-## Development
-
-- Node.js
-- SQLite
-- Vite Development Server
-
----
+Copy `server/.env.example` to `server/.env`. In production all three secrets are required.
 
-## Staging
+| Variable | Purpose |
+|----------|---------|
+| `NODE_ENV` | `production` enables the secret checks |
+| `PORT` | API port (default 4000) |
+| `CORS_ORIGIN` | Comma-separated browser origins allowed to call the API |
+| `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `JWT_MFA_SECRET` | Token signing secrets. Generate: `node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"` |
+| `DATA_DIR` | Folder for the database, uploads and whistleblower keys; use a mounted, backed-up volume |
 
-- Linux Server
-- Nginx Reverse Proxy
-- HTTPS
-- SQLite or PostgreSQL
-- PM2 Process Manager
+Client development settings (`client/.env`): `VITE_DEV_PORT` (default 5173) and `VITE_API_TARGET` (default `http://localhost:4000`).
 
 ---
 
-## Production
+## 14. API overview
 
-Recommended production stack:
+Base URL: `/api/v1`. All routes except the public ones need `Authorization: Bearer <access token>`.
 
-- Ubuntu Server LTS
-- Nginx
-- Node.js LTS
-- PostgreSQL
-- Redis (optional)
-- Docker
-- Docker Compose
-- TLS Certificates
-- Automated Backups
+| Area | Routes |
+|------|--------|
+| Auth (public) | `POST /auth/login`, `/auth/mfa/setup/verify`, `/auth/mfa/challenge`, `/auth/refresh`, `/auth/logout`; `GET /auth/me`; `POST /auth/change-password` |
+| Whistleblower (public) | `GET /whistleblower/institutions`, `/public-key`, `/track/:code`; `POST /whistleblower/submit` |
+| Engagements | `GET /engagements`, `/engagements/meta`, `/engagements/:id`, `/engagements/distance`; `POST /engagements`, `/engagements/suggest`; `PUT /engagements/:id`, `/:id/team`, `/:id/budget`, `/:id/itinerary`, `/:id/findings`; `POST /:id/preliminary`, `/:id/draft-concept`, `/:id/budget-template`, `/:id/submit-concept`, `/:id/decision`, `/:id/notification`, `/:id/start`, `/:id/documents`, `/:id/meetings`, `/:id/interviews`, `/:id/findings/add`, `/:id/conclude`, `/:id/im/sign`, `/:id/report/submit`, `/:id/complete-simple`, `/:id/monitoring/notice`, `/:id/monitoring/visit`, `/:id/certificate`, `/:id/regulator-notices`, `/:id/cancel`; downloads `GET /:id/docs/:kind`, `/:id/matrix.csv` |
+| Monitoring | `GET /monitoring/ecmd`, `/plan`, `/certificates`, `/regulator-notices`, `/libraries`, `/audit-findings` (+ `/summary`), `/funds` (+ `/export.csv`), `/programmes`, `/ic/overview`; `POST /monitoring/audit-findings` (+ `/import`, `/:id/recommend`), `/funds`, `/programmes`, `/programmes/:id/reports`, `/ic/deliverables/:id/submit`, `/ic/quarterly-reports`, `/ic/return-forms`; `PUT /funds/:id`, `/programmes/:id/reports/:rid/verify`, `/regulator-notices/:id/status` |
+| AI governance | `GET /ai-governance/decisions`, `/decisions/:id`, `/bias`; `POST /ai-governance/decisions/:id/review` |
+| Institutions | `GET/POST /institutions`, `GET/PUT /institutions/:id`, `/:id/assessments`, `/:id/summary`, `/:id/history` |
+| Assessments | `GET/POST /assessments`, `/:id/checklist`, `/:id/evidence`, `/:id/geotag`, `/:id/ai-draft`, `/:id/submit`, `/:id/review`, `/:id/report` |
+| Systems reviews | `GET/POST /systems-reviews`, `/:id/status`, `/:id/documents`, `/:id/findings`, `/findings/:id/duplicates` |
+| Recommendations | `GET /recommendations`, `/register/export.csv`; `POST /:id/respond`, `/:id/evidence`; `PUT /:id/verify` |
+| Risk register, procurement, committees, pledges | `/risk-register`, `/procurement`, `/committees`, `/pledges` (including `/pledges/:id/ceremony` and `/renew`) |
+| Platform | `/users`, `/dashboard`, `/gis`, `/reports`, `/ai`, `/notifications`, `/workflow-configs`, `/audit-logs`, `/admin/run-scheduler`, `/mock-external` (demonstration adapters), `GET /health` |
 
 ---
 
-# Docker Deployment
+## 15. Testing
 
-Build the application:
+`server/test/e2e.js` drives the running API through 24 sections (181 checks): authentication and MFA, role and scope
+enforcement, the full lifecycle of an engagement, all six document types and the certificate, return and reject rules, simple
+SOP completion, registers, ECMD and plan, AI governance, the scheduler and temporary-password handling.
 
 ```bash
-docker compose build
+cd server
+npm run seed                       # the test needs a freshly seeded database (MFA secrets are created per run)
+PORT=4000 npm run dev              # in one terminal
+npm run test:e2e                   # in another
 ```
 
-Start all services:
-
-```bash
-docker compose up -d
-```
-
-Stop services:
-
-```bash
-docker compose down
-```
-
-View logs:
-
-```bash
-docker compose logs -f
-```
+Type checks: `npx tsc --noEmit` in `server/` and in `client/`. The client build is `npm run build` in `client/`.
 
 ---
 
-# Continuous Integration & Continuous Deployment (CI/CD)
+## 16. Deployment and the production path
 
-A recommended CI/CD pipeline includes:
+**Single-server deployment:** `npm run setup` (or install, seed once, build), set the environment variables, then `npm start`.
+The server serves the built client and the API on one port. Put it behind a TLS-terminating reverse proxy (for example Nginx),
+run it under a process manager, and back up `DATA_DIR`. Do **not** run `npm run seed` on a live installation.
 
-1. Source Checkout
-2. Dependency Installation
-3. Static Code Analysis
-4. Type Checking
-5. Unit Testing
-6. Integration Testing
-7. Build Validation
-8. Security Scanning
-9. Packaging
-10. Deployment Approval
-11. Production Deployment
+**Scaling to PostgreSQL and object storage:** [docs/MIGRATION.md](docs/MIGRATION.md) lists the schema translation, query changes,
+cut-over steps, storage interface and operations checklist. Notes for more than one instance: run the scheduler on exactly one
+instance, and use sticky sessions or a Redis adapter for Socket.IO.
 
-The project is compatible with:
-
-- GitHub Actions
-- GitLab CI/CD
-- Azure DevOps
-- Jenkins
+No container files are shipped.
 
 ---
 
-# Monitoring & Observability
+## 17. Known limitations
 
-Recommended production monitoring stack:
-
-- Prometheus
-- Grafana
-- Loki
-- Node Exporter
-- Application Health Checks
-
-Key monitored metrics include:
-
-- API Availability
-- Response Times
-- Authentication Failures
-- Workflow Throughput
-- Database Performance
-- Memory Usage
-- CPU Utilisation
-- WebSocket Connections
-- Error Rates
+- **Email and SMS** are written to outboxes (`email_outbox`, `sms_outbox`); no SMTP or SMS gateway is connected yet.
+- **External systems** (case management, Auditor-General feed, judicial status) are demonstration adapters under `/mock-external`.
+- **AI** is rule-based; it has no language model and cannot read evidence documents.
+- **Shona and Ndebele** need native-speaker review; coverage is navigation and common actions.
+- **Distances and fuel** use straight-line distance with a road factor and must be confirmed against actual routes.
+- **SQLite** suits a pilot or single office; use the PostgreSQL path for national roll-out.
+- **Whistleblower key custody** (see [Security](#11-security)).
+- **Demo data and demo accounts** must be removed before real use.
 
 ---
 
-# Backup & Disaster Recovery
+## 18. Troubleshooting
 
-## Database Protection
-
-- Daily Full Backups
-- Hourly Incremental Backups
-- Point-in-Time Recovery (PITR)
-- Automated Verification
-
-## Document Protection
-
-- Encrypted Storage
-- Version History
-- Scheduled Replication
-- Integrity Verification
-
-Recovery procedures should be tested regularly to ensure compliance with organisational Recovery Time Objectives (RTO) and Recovery Point Objectives (RPO).
+| Problem | Likely cause and fix |
+|---------|----------------------|
+| Server stops at start in production | One of the three JWT secrets is missing |
+| Sign-in says too many attempts | Wait 15 minutes; the limit is per account |
+| Authenticator code rejected | Device time is wrong; enable automatic time |
+| MFA enrolment screen no longer appears | The account is already enrolled; use the code from the authenticator app. After a re-seed, enrolment starts again |
+| Test run fails on sign-in | Re-seed before every run of `npm run test:e2e` |
+| Client shows blank data in development | Server not running, or `VITE_API_TARGET` points at the wrong port |
+| An engagement does not appear for an institution user | It only appears after the Executive Secretary issues the notification letter |
 
 ---
 
-# Testing Strategy
+## 19. License and support
 
-The platform supports a comprehensive testing approach.
+**Proprietary Government Software.** Developed for the Zimbabwe Anti-Corruption Commission (ZACC). Unauthorised copying,
+modification, redistribution, reverse engineering or commercial use without written permission is prohibited.
 
-## Test Types
+**Developer:** Bloodshed Munyaradzi Chiondegwa — Software Developer | Financial Consultant | Business Systems Architect, Harare, Zimbabwe.
 
-- Unit Tests
-- Integration Tests
-- End-to-End Tests
-- API Tests
-- Security Tests
-- Performance Tests
-- Accessibility Tests
-- User Acceptance Testing (UAT)
-
-Useful commands:
-
-```bash
-npm test
-npm run test:watch
-npm run test:coverage
-npm run lint
-npm run build
-```
-
----
-
-# Troubleshooting
-
-| Issue | Recommended Resolution |
-|--------|------------------------|
-| Application fails to start | Verify environment variables and Node.js version |
-| Authentication errors | Confirm JWT configuration and system time |
-| Database unavailable | Verify database path and permissions |
-| WebSocket disconnected | Check backend service and firewall configuration |
-| GIS map not loading | Validate GIS configuration and network connectivity |
-
----
-
-# Performance Optimisation
-
-The application has been designed with scalability in mind.
-
-Optimisation features include:
-
-- Lazy Loading
-- API Pagination
-- Indexed Database Queries
-- Asset Compression
-- Browser Caching
-- Code Splitting
-- Background Processing
-- WebSocket Event Optimisation
-
----
-
-# Accessibility
-
-The portal is designed to align with accessibility best practices.
-
-Key features include:
-
-- Keyboard Navigation
-- High Contrast Support
-- Responsive Layout
-- Accessible Form Validation
-- Semantic HTML
-- Screen Reader Compatibility
-- WCAG-Oriented Interface Design
-
----
-
-# Roadmap
-
-Planned enhancements include:
-
-- Native Mobile Applications
-- Advanced AI Risk Prediction
-- OCR Document Processing
-- Digital Signatures
-- Electronic Evidence Chain of Custody
-- National Single Sign-On (SSO)
-- Open Government API Integrations
-- Business Intelligence Data Warehouse
-- Multi-Language Support
-- Advanced GIS Analytics
-
----
-
-# Contributing
-
-Development contributions should follow the project's coding standards.
-
-Guidelines include:
-
-- Use TypeScript best practices.
-- Follow established linting and formatting rules.
-- Write tests for new functionality.
-- Update documentation alongside code changes.
-- Submit changes through pull requests with peer review.
-
----
-
-# License
-
-**Proprietary Government Software**
-
-This software is proprietary and confidential.
-
-It has been developed for the Zimbabwe Anti-Corruption Commission (ZACC). Unauthorised copying, modification, redistribution, reverse engineering, or commercial use without written permission is prohibited.
-
----
-
-# Support
-
-**Developer**
-
-**Bloodshed Munyaradzi Chiondegwa**
-
-Software Developer | Financial Consultant | Business Systems Architect
-
-Harare, Zimbabwe
-
-For implementation support, deployment assistance, and maintenance enquiries, contact the development team through the project's designated support channels.
-
----
-
-# Acknowledgements
-
-This platform was developed to support the Zimbabwe Anti-Corruption Commission's mission of preventing corruption, strengthening institutional integrity, enhancing transparency, and promoting accountable public administration through secure, modern, and data-driven digital governance.
-
----
-
-<div align="center">
-
-# Zimbabwe Anti-Corruption Commission
-
-## Institutional Compliance Portal
-
-**Enterprise Digital Governance Platform**
-
-Version 1.0
-
-Developed by **Bloodshed Munyaradzi Chiondegwa**
-
-Prepared for the **Zimbabwe Anti-Corruption Commission (ZACC)**
-
-© 2026 All Rights Reserved.
-
-</div>
+© 2026 All rights reserved.
